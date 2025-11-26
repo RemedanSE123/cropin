@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // Helper function to get woreda rep phone number from token
 function getWoredaRepPhone(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');

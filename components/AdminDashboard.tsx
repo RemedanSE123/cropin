@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import DATable from './DATable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -26,14 +27,13 @@ interface KPIs {
   globalTotalData: number;
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+const COLORS = ['#2d5016', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [daUsers, setDaUsers] = useState<DAUser[]>([]);
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -112,12 +112,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredUsers = daUsers.filter(user =>
-    Object.values(user).some(val =>
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
   // Prepare chart data
   const regionData = daUsers.reduce((acc: any, da) => {
     const region = da.region || 'Unknown';
@@ -151,77 +145,107 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cropin Grow System - Admin Dashboard</h1>
-              <p className="text-sm text-gray-600">Administrator View - All Data</p>
+    <div className="min-h-screen bg-gray-50 dashboard-container">
+      {/* Top Navigation Bar - Matching Dashboard Style */}
+      <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-12">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-4">
+              <div className="relative w-16 h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
+                <Image 
+                  src="/moe.webp" 
+                  alt="Ministry of Agriculture Logo" 
+                  width={56} 
+                  height={56}
+                  className="object-contain rounded-lg"
+                  priority
+                />
+              </div>
+              <div className="border-l-2 border-gray-400 pl-4">
+                <h1 className="text-xl font-bold text-gray-800 leading-tight">
+                  Ministry of Agriculture
+                </h1>
+                <p className="text-xs font-medium text-gray-600 mt-0.5">Federal Democratic Republic of Ethiopia</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Cropin Grow System - Admin Dashboard
+                </p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <a
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 <span>Support</span>
               </a>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+                className="flex items-center space-x-2 px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md font-semibold"
               >
-                Logout
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Logout</span>
               </button>
             </div>
           </div>
         </div>
-      </header>
+      </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-[1920px] mx-auto px-6 lg:px-12 py-8">
+        {/* Header Section - Matching Dashboard Style */}
+        <div className="mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-6 shadow-lg text-white">
+          <h2 className="text-4xl font-bold mb-2 tracking-tight">
+            Administrator Dashboard
+          </h2>
+          <p className="text-lg text-gray-200 font-medium">
+            Manage and monitor all Development Agents across the system
+          </p>
+        </div>
+
         {/* KPI Cards */}
         {kpis && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-blue-500 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm font-medium">Total DA Users</p>
-                  <p className="text-3xl font-bold mt-2">{kpis.globalTotalDAs}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-600 hover:shadow-lg transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalDAs}</p>
                 </div>
-                <div className="text-4xl opacity-80">👥</div>
+                <div className="text-3xl opacity-20">👥</div>
               </div>
             </div>
-            <div className="bg-green-500 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm font-medium">Total Data Collected</p>
-                  <p className="text-3xl font-bold mt-2">{kpis.globalTotalData.toLocaleString()}</p>
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalData.toLocaleString()}</p>
                 </div>
-                <div className="text-4xl opacity-80">📊</div>
+                <div className="text-3xl opacity-20">📊</div>
               </div>
             </div>
-            <div className="bg-purple-500 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm font-medium">Total Woreda Reps</p>
-                  <p className="text-3xl font-bold mt-2">{daUsers.length > 0 ? new Set(daUsers.map(d => d.reporting_manager_mobile)).size : 0}</p>
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600 hover:shadow-lg transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Woreda Reps</p>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">{daUsers.length > 0 ? new Set(daUsers.map(d => d.reporting_manager_mobile)).size : 0}</p>
                 </div>
-                <div className="text-4xl opacity-80">🌍</div>
+                <div className="text-3xl opacity-20">🌍</div>
               </div>
             </div>
-            <div className="bg-orange-500 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm font-medium">Avg Data per DA</p>
-                  <p className="text-3xl font-bold mt-2">{kpis.globalTotalDAs > 0 ? Math.round(kpis.globalTotalData / kpis.globalTotalDAs).toLocaleString() : 0}</p>
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-amber-600 hover:shadow-lg transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalDAs > 0 ? Math.round(kpis.globalTotalData / kpis.globalTotalDAs).toLocaleString() : 0}</p>
                 </div>
-                <div className="text-4xl opacity-80">📈</div>
+                <div className="text-3xl opacity-20">📈</div>
               </div>
             </div>
           </div>
@@ -229,63 +253,115 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-4">Data by Region (Top 10)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={regionChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="region" angle={-45} textAnchor="end" height={100} />
-                <YAxis />
-                <Tooltip />
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Data by Region (Top 10)</h2>
+              <p className="text-sm text-gray-600">Total data collected per region</p>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={regionChartData} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="region" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  tickFormatter={(value) => value.toLocaleString()}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
                 <Legend />
-                <Bar dataKey="total" fill="#3B82F6" name="Total Data" />
+                <Bar dataKey="total" fill="#2d5016" name="Total Data" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-4">Status Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Status Distribution</h2>
+              <p className="text-sm text-gray-600">DA users by status</p>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]} 
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* All DA Users Table */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="mb-4">
-            <h2 className="text-2xl font-semibold mb-4">All Development Agents</h2>
-            <input
-              type="text"
-              placeholder="Search all DA users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="mt-8">
           <DATable
-            daUsers={filteredUsers}
+            daUsers={daUsers}
             onUpdate={handleUpdate}
             isEditable={true}
           />
         </div>
       </main>
+
+      {/* Footer - Matching Dashboard Style */}
+      <footer className="bg-gray-800 text-white mt-12 border-t-2 border-gray-700">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-12 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h4 className="font-bold text-sm mb-2">Ministry of Agriculture</h4>
+              <p className="text-gray-400 text-xs">Federal Democratic Republic of Ethiopia</p>
+              <p className="text-gray-500 text-xs mt-1">Cropin Grow System</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm mb-2">System Information</h4>
+              <p className="text-gray-400 text-xs">Real-time Agricultural Data Collection</p>
+              <p className="text-gray-500 text-xs mt-1">Monitoring and Analytics Platform</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm mb-2">Contact & Support</h4>
+              <a 
+                href="https://forms.gle/YRGNNjeVnGJyUuZdA" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 text-xs hover:text-white underline"
+              >
+                Report Issues / Get Support
+              </a>
+              <p className="text-gray-500 text-xs mt-1">© {new Date().getFullYear()} All Rights Reserved</p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
