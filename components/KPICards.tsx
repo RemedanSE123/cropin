@@ -31,18 +31,18 @@ export default function KPICards({ kpis }: { kpis: KPIs }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
       {cards.map((card, index) => (
         <div
           key={index}
-          className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${getBorderColor(card.color)} hover:shadow-lg transition`}
+          className={`bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 ${getBorderColor(card.color)} hover:shadow-lg transition`}
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{card.title}</p>
-              <p className="text-4xl font-bold text-gray-900 mb-1">{card.value}</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{card.value}</p>
             </div>
-            <div className="text-3xl opacity-20">{card.icon}</div>
+            <div className="text-2xl sm:text-3xl opacity-20">{card.icon}</div>
           </div>
         </div>
       ))}

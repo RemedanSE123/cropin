@@ -36,16 +36,27 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Store data in parallel for faster execution
-        Promise.all([
+        const storagePromises = [
           localStorage.setItem('token', data.token),
           localStorage.setItem('woredaRepPhone', data.woredaRepPhone),
           localStorage.setItem('woredaRepName', data.name),
           localStorage.setItem('isAdmin', data.isAdmin ? 'true' : 'false'),
-        ]);
+          localStorage.setItem('isRegionalManager', data.isRegionalManager ? 'true' : 'false'),
+        ];
+        
+        // Store region if it exists
+        if (data.region) {
+          storagePromises.push(localStorage.setItem('region', data.region));
+          console.log('Login - Storing region:', data.region);
+        }
+        
+        Promise.all(storagePromises);
 
         // Navigate immediately without waiting
         if (data.isAdmin) {
           router.push('/admin');
+        } else if (data.isRegionalManager) {
+          router.push('/regional-manager');
         } else {
           router.push('/dashboard');
         }
@@ -71,10 +82,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 dashboard-container">
       {/* Top Navigation Bar - Matching Dashboard */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
-        <div className="max-w-[1920px] mx-auto px-6 lg:px-12">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="relative w-16 h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
@@ -84,23 +95,24 @@ export default function LoginPage() {
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-4">
-                <h1 className="text-xl font-bold text-gray-800 leading-tight">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+                <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
-                <p className="text-xs font-medium text-gray-600 mt-0.5">Federal Democratic Republic of Ethiopia</p>
-                <p className="text-xs text-gray-500 mt-0.5">Cropin Grow System - Login</p>
+                <p className="text-[10px] sm:text-xs font-medium text-gray-600 mt-0.5">Federal Democratic Republic of Ethiopia</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">Cropin Grow System - Login</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
               <button
                 onClick={handleBackToDashboard}
-                className="flex items-center space-x-2 px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold"
+                className="flex items-center space-x-2 px-3 sm:px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold text-sm sm:text-base"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span>Back to Dashboard</span>
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </button>
             </div>
           </div>
@@ -108,24 +120,24 @@ export default function LoginPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-[1920px] mx-auto px-6 lg:px-12 py-12">
+      <main className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12 py-6 sm:py-12">
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
           <div className="w-full max-w-md">
             {/* Login Card */}
-            <div className="bg-white rounded-xl shadow-xl p-8 border-2 border-gray-200">
+            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 md:p-8 border-2 border-gray-200">
               {/* Header */}
-              <div className="text-center mb-8">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="flex justify-center mb-3 sm:mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   Sign In
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Access your Cropin Grow System account
                 </p>
               </div>
@@ -215,30 +227,53 @@ export default function LoginPage() {
       </main>
 
       {/* Footer - Matching Dashboard */}
-      <footer className="bg-gray-800 text-white mt-12 border-t-2 border-gray-700">
-        <div className="max-w-[1920px] mx-auto px-6 lg:px-12 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h4 className="font-bold text-sm mb-2">Ministry of Agriculture</h4>
-              <p className="text-gray-400 text-xs">Federal Democratic Republic of Ethiopia</p>
-              <p className="text-gray-500 text-xs mt-1">Cropin Grow System</p>
+      <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white mt-8 sm:mt-12 border-t-2 border-gray-700 shadow-2xl">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12 py-6 sm:py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-green-500 pl-3">Ministry of Agriculture</h4>
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">Federal Democratic Republic of Ethiopia</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium">Cropin Grow System</p>
             </div>
-            <div>
-              <h4 className="font-bold text-sm mb-2">System Information</h4>
-              <p className="text-gray-400 text-xs">Real-time Agricultural Data Collection</p>
-              <p className="text-gray-500 text-xs mt-1">Monitoring and Analytics Platform</p>
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-blue-500 pl-3">System Information</h4>
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">Real-time Agricultural Data Collection</p>
+              <p className="text-gray-400 text-xs sm:text-sm">Monitoring and Analytics Platform</p>
             </div>
-            <div>
-              <h4 className="font-bold text-sm mb-2">Contact & Support</h4>
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-purple-500 pl-3">Contact & Support</h4>
               <a 
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 text-xs hover:text-white underline"
+                className="inline-flex items-center gap-2 text-gray-300 text-xs sm:text-sm hover:text-white hover:underline transition-colors duration-200 group"
               >
+                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
                 Report Issues / Get Support
               </a>
-              <p className="text-gray-500 text-xs mt-1">© {new Date().getFullYear()} All Rights Reserved</p>
+              <p className="text-gray-400 text-xs sm:text-sm mt-2">© {new Date().getFullYear()} All Rights Reserved</p>
+            </div>
+          </div>
+          {/* Powered By Section */}
+          <div className="border-t border-gray-700 pt-6 sm:pt-8 mt-6 sm:mt-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <p className="text-gray-400 text-xs sm:text-sm font-medium">Powered by</p>
+              <div className="flex items-center gap-3 bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-all duration-200 hover:border-gray-600">
+                <Image 
+                  src="/knd.png" 
+                  alt="Kukunet digital Logo" 
+                  width={120} 
+                  height={40}
+                  className="h-8 sm:h-10 w-auto object-contain hover:scale-105 transition-transform duration-200"
+                  unoptimized
+                  onError={(e) => {
+                    console.error('Failed to load logo:', e);
+                  }}
+                />
+                <span className="text-white font-semibold text-sm sm:text-base">Kukunet digital</span>
+              </div>
             </div>
           </div>
         </div>

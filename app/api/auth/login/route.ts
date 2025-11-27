@@ -32,6 +32,36 @@ export async function POST(request: NextRequest) {
       }, { status: 200 });
     }
 
+    // Regional Manager login check - instant, no DB query
+    // Using actual database region names (Amharic and English as stored in DB)
+    const regionalManagerMap: { [key: string]: { region: string; name: string } } = {
+      'tigray@123': { region: 'ትግራይ', name: 'Tigray Regional Manager' },
+      'south@123': { region: 'ደቡብ ኢትዮጵያ', name: 'Southern Ethiopia Regional Manager' },
+      'sidama@123': { region: 'Sidama', name: 'Sidama Regional Manager' },
+      'ce@123': { region: 'Central Ethiopia', name: 'Central Ethiopia Regional Manager' },
+      'amhara@123': { region: 'Amhara', name: 'Amhara Regional Manager' },
+      'oromiya@123': { region: 'Oromiya', name: 'Oromiya Regional Manager' },
+    };
+
+    if (phoneNumber in regionalManagerMap && password === '123') {
+      const managerInfo = regionalManagerMap[phoneNumber];
+      const token = Buffer.from(JSON.stringify({
+        phoneNumber: phoneNumber,
+        isAdmin: false,
+        isRegionalManager: true,
+        region: managerInfo.region
+      })).toString('base64');
+
+      return NextResponse.json({
+        token,
+        woredaRepPhone: phoneNumber,
+        name: managerInfo.name,
+        isAdmin: false,
+        isRegionalManager: true,
+        region: managerInfo.region,
+      }, { status: 200 });
+    }
+
     // Fixed password check for Woreda Reps - check before DB query
     if (password !== '123') {
       return NextResponse.json(

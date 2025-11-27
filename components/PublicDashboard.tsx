@@ -263,10 +263,10 @@ export default function PublicDashboard() {
     <div className="min-h-screen bg-gray-50 dashboard-container">
       {/* Top Navigation Bar - Professional */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
-        <div className="max-w-[1920px] mx-auto px-6 lg:px-12">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="relative w-16 h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
@@ -276,26 +276,26 @@ export default function PublicDashboard() {
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-4">
-                <h1 className="text-xl font-bold text-gray-800 leading-tight">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+                <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
-                <p className="text-xs font-medium text-gray-600 mt-0.5">Federal Democratic Republic of Ethiopia</p>
-                <p className="text-xs text-gray-500 mt-0.5">Cropin Grow System - Real-Time Monitoring Dashboard</p>
+                <p className="text-[10px] sm:text-xs font-medium text-gray-600 mt-0.5">Federal Democratic Republic of Ethiopia</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">Cropin Grow System - Real-Time Monitoring Dashboard</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
               <button
                 onClick={fetchStats}
-                className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300"
+                className="flex items-center space-x-2 px-2 sm:px-3 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300 text-xs sm:text-sm"
                 title="Refresh Data"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span className="hidden md:inline">Refresh</span>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
-              <div className="text-right mr-4 hidden md:block">
+              <div className="text-right hidden lg:block">
                 <p className="text-xs text-gray-500">Last Updated</p>
                 <p className="text-sm font-semibold text-gray-700">
                   {lastUpdated.toLocaleTimeString()}
@@ -305,16 +305,16 @@ export default function PublicDashboard() {
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300"
+                className="flex items-center space-x-2 px-2 sm:px-4 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300 text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-                <span>Support</span>
+                <span className="hidden sm:inline">Support</span>
               </a>
               <button
                 onClick={handleLogin}
-                className="flex items-center space-x-2 px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold"
+                className="flex items-center space-x-2 px-3 sm:px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -327,19 +327,19 @@ export default function PublicDashboard() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-[1920px] mx-auto px-6 lg:px-12 py-8">
+      <main className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12 py-4 sm:py-8">
         {/* Header Section - Professional */}
-        <div className="mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-6 shadow-lg text-white">
-          <h2 className="text-4xl font-bold mb-2 tracking-tight">
+        <div className="mb-6 sm:mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-4 sm:p-6 shadow-lg text-white">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 tracking-tight">
             Agricultural Data Collection Dashboard
           </h2>
-          <p className="text-lg text-gray-200 font-medium">
+          <p className="text-sm sm:text-base md:text-lg text-gray-200 font-medium">
             Real-time insights and comprehensive statistics from Development Agents across Ethiopia
           </p>
         </div>
 
         {/* KPI Cards - Professional Design */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-600 hover:shadow-lg transition">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -394,7 +394,7 @@ export default function PublicDashboard() {
         </div>
 
         {/* Status Cards - Professional */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -457,35 +457,59 @@ export default function PublicDashboard() {
         </div>
 
         {/* Charts Grid - Top 5 Regions and Status Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* All Regions - Area Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">Data Collection by Region</h3>
-                <p className="text-sm text-gray-600">All Regions ({regionChartData.length} total)</p>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data Collection by Region</h3>
+                <p className="text-xs sm:text-sm text-gray-600">All Regions ({regionChartData.length} total)</p>
               </div>
             </div>
             {regionChartData.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={regionChartData} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px]">
+                  <BarChart data={regionChartData} margin={{ top: 20, right: 30, left: 10, bottom: 80 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                     <XAxis 
                       dataKey="name" 
                       angle={-35} 
                       textAnchor="end" 
                       height={100}
-                      tick={{ fontSize: 11, fill: '#6b7280' }}
+                      tick={{ fontSize: 10, fill: '#4b5563', fontWeight: 500 }}
                       interval={0}
+                      stroke="#9ca3af"
                     />
                     <YAxis 
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tick={{ fontSize: 11, fill: '#4b5563', fontWeight: 500 }}
                       tickFormatter={(value) => value.toLocaleString()}
+                      stroke="#9ca3af"
+                      label={{ value: 'Data Collected', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '12px', fontWeight: 600 } }}
                     />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="data" fill="#2d5016" name="Total Data" radius={[4, 4, 0, 0]} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#ffffff', 
+                        border: '1px solid #d1d5db', 
+                        borderRadius: '8px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        padding: '12px',
+                        fontSize: '13px'
+                      }}
+                      cursor={{ fill: 'rgba(45, 80, 22, 0.1)' }}
+                      formatter={(value: any) => [value.toLocaleString(), 'Total Data']}
+                    />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                      iconType="rect"
+                    />
+                    <Bar 
+                      dataKey="data" 
+                      name="Total Data Collected" 
+                      fill="#2d5016" 
+                      radius={[6, 6, 0, 0]}
+                      stroke="#1e3a0f"
+                      strokeWidth={1}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className={`mt-6 grid gap-2 ${regionChartData.length <= 5 ? 'grid-cols-5' : regionChartData.length <= 6 ? 'grid-cols-6' : 'grid-cols-3'}`}>
@@ -518,16 +542,16 @@ export default function PublicDashboard() {
           </div>
 
           {/* DA Status Distribution - Pie Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">DA Status Distribution</h3>
-                <p className="text-sm text-gray-600">Current Status Overview</p>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">DA Status Distribution</h3>
+                <p className="text-xs sm:text-sm text-gray-600">Current Status Overview</p>
               </div>
             </div>
             {pieData.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px]">
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -535,15 +559,38 @@ export default function PublicDashboard() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      outerRadius="70%"
+                      innerRadius="30%"
                       fill="#8884d8"
                       dataKey="value"
+                      paddingAngle={2}
                     >
                       {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color}
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#ffffff', 
+                        border: '1px solid #d1d5db', 
+                        borderRadius: '8px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        padding: '12px',
+                        fontSize: '13px'
+                      }}
+                      formatter={(value: any) => [value.toLocaleString(), 'Count']}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                      iconType="circle"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="mt-6 space-y-2">
@@ -579,14 +626,14 @@ export default function PublicDashboard() {
         </div>
 
         {/* Top Data Collectors - Professional Table */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 mb-6 sm:mb-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">Top 5 Data Collectors</h3>
-              <p className="text-sm text-gray-600">Highest Performing Development Agents</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Top 5 Data Collectors</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Highest Performing Development Agents</p>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-100">
@@ -659,32 +706,56 @@ export default function PublicDashboard() {
         </div>
 
         {/* Zone Data Chart - Full Width */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">Data Collection by Zone</h3>
-              <p className="text-sm text-gray-600">Top 10 Zones Performance Analysis</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data Collection by Zone</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Top 10 Zones Performance Analysis</p>
             </div>
           </div>
           {zoneChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={zoneChartData} margin={{ top: 20, right: 30, left: 0, bottom: 100 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <ResponsiveContainer width="100%" height={450} className="sm:h-[500px] md:h-[550px]">
+              <ComposedChart data={zoneChartData} margin={{ top: 20, right: 30, left: 10, bottom: 100 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
                   angle={-45} 
                   textAnchor="end" 
                   height={120}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  tick={{ fontSize: 10, fill: '#4b5563', fontWeight: 500 }}
                   interval={0}
+                  stroke="#9ca3af"
                 />
                 <YAxis 
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  tick={{ fontSize: 11, fill: '#4b5563', fontWeight: 500 }}
                   tickFormatter={(value) => value.toLocaleString()}
+                  stroke="#9ca3af"
+                  label={{ value: 'Data Collected', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '12px', fontWeight: 600 } }}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="data" fill="#1e3a5f" name="Total Data" radius={[4, 4, 0, 0]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#ffffff', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    padding: '12px',
+                    fontSize: '13px'
+                  }}
+                  cursor={{ fill: 'rgba(30, 58, 95, 0.1)' }}
+                  formatter={(value: any) => [value.toLocaleString(), 'Total Data']}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                  iconType="rect"
+                />
+                <Bar 
+                  dataKey="data" 
+                  name="Total Data Collected" 
+                  fill="#1e3a5f" 
+                  radius={[6, 6, 0, 0]}
+                  stroke="#0f1f3a"
+                  strokeWidth={1}
+                />
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
@@ -703,30 +774,53 @@ export default function PublicDashboard() {
       </main>
 
       {/* Footer - Professional */}
-      <footer className="bg-gray-800 text-white mt-12 border-t-2 border-gray-700">
-        <div className="max-w-[1920px] mx-auto px-6 lg:px-12 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h4 className="font-bold text-sm mb-2">Ministry of Agriculture</h4>
-              <p className="text-gray-400 text-xs">Federal Democratic Republic of Ethiopia</p>
-              <p className="text-gray-500 text-xs mt-1">Cropin Grow System</p>
+      <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white mt-8 sm:mt-12 border-t-2 border-gray-700 shadow-2xl">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12 py-6 sm:py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-green-500 pl-3">Ministry of Agriculture</h4>
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">Federal Democratic Republic of Ethiopia</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium">Cropin Grow System</p>
             </div>
-            <div>
-              <h4 className="font-bold text-sm mb-2">System Information</h4>
-              <p className="text-gray-400 text-xs">Real-time Agricultural Data Collection</p>
-              <p className="text-gray-500 text-xs mt-1">Monitoring and Analytics Platform</p>
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-blue-500 pl-3">System Information</h4>
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">Real-time Agricultural Data Collection</p>
+              <p className="text-gray-400 text-xs sm:text-sm">Monitoring and Analytics Platform</p>
             </div>
-            <div>
-              <h4 className="font-bold text-sm mb-2">Contact & Support</h4>
+            <div className="space-y-3">
+              <h4 className="font-bold text-base sm:text-lg mb-3 text-white border-l-4 border-purple-500 pl-3">Contact & Support</h4>
               <a 
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 text-xs hover:text-white underline"
+                className="inline-flex items-center gap-2 text-gray-300 text-xs sm:text-sm hover:text-white hover:underline transition-colors duration-200 group"
               >
+                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
                 Report Issues / Get Support
               </a>
-              <p className="text-gray-500 text-xs mt-1">© {new Date().getFullYear()} All Rights Reserved</p>
+              <p className="text-gray-400 text-xs sm:text-sm mt-2">© {new Date().getFullYear()} All Rights Reserved</p>
+            </div>
+          </div>
+          {/* Powered By Section */}
+          <div className="border-t border-gray-700 pt-6 sm:pt-8 mt-6 sm:mt-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <p className="text-gray-400 text-xs sm:text-sm font-medium">Powered by</p>
+              <div className="flex items-center gap-3 bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-all duration-200 hover:border-gray-600">
+                <Image 
+                  src="/knd.png" 
+                  alt="Kukunet digital Logo" 
+                  width={120} 
+                  height={40}
+                  className="h-8 sm:h-10 w-auto object-contain hover:scale-105 transition-transform duration-200"
+                  unoptimized
+                  onError={(e) => {
+                    console.error('Failed to load logo:', e);
+                  }}
+                />
+                <span className="text-white font-semibold text-sm sm:text-base">Kukunet digital</span>
+              </div>
             </div>
           </div>
         </div>

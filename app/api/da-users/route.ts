@@ -31,11 +31,32 @@ function isAdmin(request: NextRequest): boolean {
   }
 }
 
+// Helper function to check if user is regional manager and get their region
+function getRegionalManagerInfo(request: NextRequest): { isRegionalManager: boolean; region: string | null } {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) return { isRegionalManager: false, region: null };
+  
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+    console.log('Regional Manager Debug - Decoded token:', JSON.stringify(decoded));
+    if (decoded.isRegionalManager === true && decoded.region) {
+      console.log('Regional Manager - Identified as regional manager with region:', decoded.region);
+      return { isRegionalManager: true, region: decoded.region };
+    }
+    return { isRegionalManager: false, region: null };
+  } catch (error) {
+    console.error('Regional Manager - Error decoding token:', error);
+    return { isRegionalManager: false, region: null };
+  }
+}
+
 // GET - Fetch DA users
 export async function GET(request: NextRequest) {
   try {
     const woredaRepPhone = getWoredaRepPhone(request);
     const admin = isAdmin(request);
+    const regionalManagerInfo = getRegionalManagerInfo(request);
     const { searchParams } = new URL(request.url);
     const region = searchParams.get('region');
     const zone = searchParams.get('zone');
@@ -47,15 +68,45 @@ export async function GET(request: NextRequest) {
     const params: any[] = [];
     let paramCount = 0;
 
+    // Regional Managers see all DAs from their region (read-only)
+    if (regionalManagerInfo.isRegionalManager && regionalManagerInfo.region) {
+      // First, try to find the exact region name in the database (case-insensitive)
+      try {
+        const regionCheck = await pool.query(
+          'SELECT DISTINCT region FROM da_users WHERE LOWER(TRIM(region)) = LOWER(TRIM($1)) LIMIT 1',
+          [regionalManagerInfo.region]
+        );
+        
+        if (regionCheck.rows.length > 0) {
+          // Use the actual region name from database
+          paramCount++;
+          query += ` AND region = $${paramCount}`;
+          params.push(regionCheck.rows[0].region);
+          console.log('Regional Manager - Using exact region:', regionCheck.rows[0].region);
+        } else {
+          // Fallback to case-insensitive matching
+          paramCount++;
+          query += ` AND LOWER(TRIM(region)) = LOWER(TRIM($${paramCount}))`;
+          params.push(regionalManagerInfo.region);
+          console.log('Regional Manager - Using case-insensitive match for:', regionalManagerInfo.region);
+        }
+      } catch (err) {
+        // Fallback to case-insensitive matching if query fails
+        paramCount++;
+        query += ` AND LOWER(TRIM(region)) = LOWER(TRIM($${paramCount}))`;
+        params.push(regionalManagerInfo.region);
+        console.log('Regional Manager - Fallback to case-insensitive match');
+      }
+    }
     // Admin can see all, Woreda Reps only see their own
-    if (!admin && !global && woredaRepPhone && woredaRepPhone !== 'Admin@123') {
+    else if (!admin && !global && woredaRepPhone && woredaRepPhone !== 'Admin@123') {
       paramCount++;
       query += ` AND reporting_manager_mobile = $${paramCount}`;
       params.push(woredaRepPhone);
     }
 
-    // Apply filters
-    if (region) {
+    // Apply filters (only if not already filtered by regional manager)
+    if (region && !regionalManagerInfo.isRegionalManager) {
       paramCount++;
       query += ` AND region = $${paramCount}`;
       params.push(region);
@@ -73,7 +124,15 @@ export async function GET(request: NextRequest) {
 
     query += ' ORDER BY name';
 
+    console.log('Regional Manager - Final query:', query);
+    console.log('Regional Manager - Query params:', params);
+
     const result = await pool.query(query, params);
+
+    console.log('Regional Manager - Query result count:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('Regional Manager - Sample result region:', result.rows[0].region);
+    }
 
     return NextResponse.json({ daUsers: result.rows });
   } catch (error) {
@@ -90,11 +149,20 @@ export async function PATCH(request: NextRequest) {
   try {
     const woredaRepPhone = getWoredaRepPhone(request);
     const admin = isAdmin(request);
+    const regionalManagerInfo = getRegionalManagerInfo(request);
     
     if (!woredaRepPhone) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Regional Managers cannot edit (read-only access)
+    if (regionalManagerInfo.isRegionalManager) {
+      return NextResponse.json(
+        { error: 'Regional managers have read-only access' },
+        { status: 403 }
       );
     }
 
