@@ -13,12 +13,14 @@ interface DAUser {
   zone: string;
   woreda: string;
   kebele: string;
-  contactnumber: string;
+  contact_number: string;
   reporting_manager_name: string;
   reporting_manager_mobile: string;
   language: string;
-  total_collected_data: number;
+  total_data_collected: number;
   status: string;
+  last_updated?: string;
+  created_at?: string;
 }
 
 interface KPIs {
@@ -93,7 +95,7 @@ export default function DashboardContent() {
     router.push('/login');
   };
 
-  const handleUpdate = async (contactnumber: string, field: 'total_collected_data' | 'status', value: any) => {
+  const handleUpdate = async (contact_number: string, field: 'total_data_collected' | 'status', value: any) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/da-users', {
@@ -103,7 +105,7 @@ export default function DashboardContent() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          contactnumber,
+          contact_number,
           [field]: value,
         }),
       });
@@ -124,7 +126,7 @@ export default function DashboardContent() {
   // Prepare chart data
   const chartData = daUsers.map(da => ({
     name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name,
-    'Data Collected': da.total_collected_data || 0,
+    'Data Collected': da.total_data_collected || 0,
   }));
 
   if (loading) {

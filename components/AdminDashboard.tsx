@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DATable from './DATable';
@@ -12,12 +12,14 @@ interface DAUser {
   zone: string;
   woreda: string;
   kebele: string;
-  contactnumber: string;
+  contact_number: string;
   reporting_manager_name: string;
   reporting_manager_mobile: string;
   language: string;
-  total_collected_data: number;
+  total_data_collected: number;
   status: string;
+  last_updated?: string;
+  created_at?: string;
 }
 
 interface KPIs {
@@ -25,6 +27,7 @@ interface KPIs {
   repTotalData: number;
   globalTotalDAs: number;
   globalTotalData: number;
+  avgDataPerDA?: number;
 }
 
 // International standard color palette - accessible and professional
@@ -66,10 +69,15 @@ export default function AdminDashboard() {
 
       if (daResponse.ok) {
         const daData = await daResponse.json();
-        setDaUsers(daData.daUsers || []);
+        // Clean/trim names
+        const cleanedUsers = (daData.daUsers || []).map((user: DAUser) => ({
+          ...user,
+          name: (user.name || '').trim()
+        }));
+        setDaUsers(cleanedUsers);
       }
 
-      // Fetch KPIs
+      // Fetch initial KPIs (will be overridden by calculated KPIs)
       const kpiResponse = await fetch('/api/kpis', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -87,6 +95,54 @@ export default function AdminDashboard() {
     }
   };
 
+  // Calculate KPIs from local daUsers state so they update automatically
+  const calculatedKPIs = useMemo(() => {
+    try {
+      const globalTotalDAs = daUsers.length;
+      const globalTotalData = daUsers.reduce((sum, user) => {
+        const dataValue = user.total_data_collected || 0;
+        if (isNaN(dataValue)) {
+          console.warn('Invalid total_data_collected for user:', user.contact_number, 'value:', user.total_data_collected);
+          return sum;
+        }
+        return sum + dataValue;
+      }, 0);
+      
+      const avgDataPerDA = globalTotalDAs > 0 ? Math.round(globalTotalData / globalTotalDAs) : 0;
+
+      // Debug logging
+      if (globalTotalDAs > 0 && avgDataPerDA === 0 && globalTotalData > 0) {
+        console.warn('Avg Data per DA calculation warning:', {
+          globalTotalDAs,
+          globalTotalData,
+          calculatedAvg: globalTotalData / globalTotalDAs,
+          roundedAvg: avgDataPerDA
+        });
+      }
+
+      // Always return calculated KPIs, even if empty
+      return {
+        repTotalDAs: globalTotalDAs,
+        repTotalData: globalTotalData,
+        globalTotalDAs: globalTotalDAs,
+        globalTotalData: globalTotalData,
+        avgDataPerDA: avgDataPerDA,
+      };
+    } catch (error) {
+      console.error('Error calculating KPIs:', error);
+      return {
+        repTotalDAs: 0,
+        repTotalData: 0,
+        globalTotalDAs: 0,
+        globalTotalData: 0,
+        avgDataPerDA: 0,
+      };
+    }
+  }, [daUsers]);
+
+  // Use calculated KPIs (always available), fallback to fetched KPIs only for initial load
+  const displayKPIs = calculatedKPIs.globalTotalDAs > 0 ? calculatedKPIs : (kpis || calculatedKPIs);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('woredaRepPhone');
@@ -95,7 +151,7 @@ export default function AdminDashboard() {
     router.push('/login');
   };
 
-  const handleUpdate = async (contactnumber: string, field: 'total_collected_data' | 'status', value: any) => {
+  const handleUpdate = async (contact_number: string, field: 'total_data_collected' | 'status', value: any) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/da-users', {
@@ -105,20 +161,39 @@ export default function AdminDashboard() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          contactnumber,
+          contact_number,
           [field]: value,
         }),
       });
 
       if (response.ok) {
-        fetchData();
+        // Update local state without re-fetching to preserve row positions
+        // Only update the specific user's data
+        setDaUsers(prevUsers => {
+          const updated = prevUsers.map(user => 
+            user.contact_number === contact_number
+              ? { ...user, [field]: value }
+              : user
+          );
+          // Clean/trim names
+          return updated.map(user => ({
+            ...user,
+            name: (user.name || '').trim()
+          }));
+        });
+        // Optionally refresh KPIs in the background without affecting table order
+        // fetchData(); // Commented out to prevent row reordering
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to update');
+        // Re-fetch on error to restore correct state
+        fetchData();
       }
     } catch (error) {
       console.error('Error updating:', error);
       alert('An error occurred while updating');
+      // Re-fetch on error to restore correct state
+      fetchData();
     }
   };
 
@@ -128,15 +203,19 @@ export default function AdminDashboard() {
     if (!acc[region]) {
       acc[region] = { region, total: 0, count: 0 };
     }
-    acc[region].total += da.total_collected_data || 0;
+    acc[region].total += da.total_data_collected || 0;
     acc[region].count += 1;
     return acc;
   }, {});
 
-  const regionChartData = Object.values(regionData).slice(0, 10);
+  // Sort region data by total descending, then take top 10
+  const regionChartData = Object.values(regionData)
+    .sort((a: any, b: any) => (b.total || 0) - (a.total || 0))
+    .slice(0, 10);
 
   const statusData = daUsers.reduce((acc: any, da) => {
-    const status = da.status || 'Unknown';
+    // Normalize status: only 'Active' or 'Inactive', default to 'Inactive'
+    const status = da.status === 'Active' ? 'Active' : 'Inactive';
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
@@ -220,13 +299,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* KPI Cards */}
-        {kpis && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-600 hover:shadow-lg transition">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalDAs}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalDAs}</p>
                 </div>
                 <div className="text-2xl sm:text-3xl opacity-20">👥</div>
               </div>
@@ -235,7 +313,7 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalData.toLocaleString()}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalData.toLocaleString()}</p>
                 </div>
                 <div className="text-2xl sm:text-3xl opacity-20">📊</div>
               </div>
@@ -253,13 +331,14 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{kpis.globalTotalDAs > 0 ? Math.round(kpis.globalTotalData / kpis.globalTotalDAs).toLocaleString() : 0}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                    {calculatedKPIs.avgDataPerDA.toLocaleString()}
+                  </p>
                 </div>
                 <div className="text-2xl sm:text-3xl opacity-20">📈</div>
               </div>
             </div>
           </div>
-        )}
 
         {/* Status KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
@@ -268,11 +347,11 @@ export default function AdminDashboard() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active DAs</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                  {daUsers.filter(u => u.status === 'Active').length}
+                  {daUsers.filter(u => (u.status === 'Active')).length}
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
                   {daUsers.length > 0 
-                    ? `${((daUsers.filter(u => u.status === 'Active').length / daUsers.length) * 100).toFixed(1)}% of total`
+                    ? `${((daUsers.filter(u => (u.status === 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
                     : '0% of total'}
                 </p>
               </div>
@@ -284,31 +363,15 @@ export default function AdminDashboard() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Inactive DAs</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                  {daUsers.filter(u => u.status === 'Inactive').length}
+                  {daUsers.filter(u => (u.status !== 'Active')).length}
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
                   {daUsers.length > 0 
-                    ? `${((daUsers.filter(u => u.status === 'Inactive').length / daUsers.length) * 100).toFixed(1)}% of total`
+                    ? `${((daUsers.filter(u => (u.status !== 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
                     : '0% of total'}
                 </p>
               </div>
               <div className="text-2xl sm:text-3xl opacity-20">❌</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-yellow-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Pending DAs</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                  {daUsers.filter(u => u.status === 'Pending' || !u.status).length}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {daUsers.length > 0 
-                    ? `${((daUsers.filter(u => u.status === 'Pending' || !u.status).length / daUsers.length) * 100).toFixed(1)}% of total`
-                    : '0% of total'}
-                </p>
-              </div>
-              <div className="text-2xl sm:text-3xl opacity-20">⏳</div>
             </div>
           </div>
         </div>
@@ -317,50 +380,73 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
             <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data by Region (Top 10)</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Total data collected per region</p>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-1">Data Collection by Region</h2>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">Total data collected per administrative region</p>
             </div>
             <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px]">
-              <BarChart data={regionChartData} margin={{ top: 20, right: 30, left: 10, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+              <BarChart data={regionChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.4} />
                 <XAxis 
                   dataKey="region" 
                   angle={-45} 
                   textAnchor="end" 
                   height={100}
-                  tick={{ fontSize: 10, fill: '#4b5563', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: '#1f2937', fontWeight: 500, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   interval={0}
-                  stroke="#9ca3af"
+                  stroke="#6b7280"
+                  tickLine={{ stroke: '#9ca3af' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 11, fill: '#4b5563', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: '#1f2937', fontWeight: 500, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   tickFormatter={(value) => value.toLocaleString()}
-                  stroke="#9ca3af"
-                  label={{ value: 'Data Collected', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '12px', fontWeight: 600 } }}
+                  stroke="#6b7280"
+                  tickLine={{ stroke: '#9ca3af' }}
+                  label={{ 
+                    value: 'Data Collected', 
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    style: { 
+                      textAnchor: 'middle', 
+                      fill: '#374151', 
+                      fontSize: '13px', 
+                      fontWeight: 500,
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    } 
+                  }}
                 />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#ffffff', 
                     border: '1px solid #d1d5db', 
-                    borderRadius: '8px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    padding: '12px',
-                    fontSize: '13px'
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    padding: '12px 16px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
                   }}
-                  cursor={{ fill: 'rgba(45, 80, 22, 0.1)' }}
-                  formatter={(value: any) => [value.toLocaleString(), 'Total Data']}
+                  cursor={{ fill: 'rgba(107, 114, 128, 0.1)', stroke: '#6b7280', strokeWidth: 1 }}
+                  formatter={(value: any) => [value.toLocaleString(), 'Total Data Collected']}
+                  labelStyle={{ 
+                    color: '#111827', 
+                    fontWeight: 600, 
+                    fontSize: '13px', 
+                    marginBottom: '6px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}
                 />
                 <Legend 
-                  wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                  wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   iconType="rect"
                 />
                 <Bar 
                   dataKey="total" 
                   name="Total Data Collected" 
-                  fill="#2d5016" 
-                  radius={[6, 6, 0, 0]}
-                  stroke="#1e3a0f"
+                  fill="#2563eb" 
+                  radius={[4, 4, 0, 0]}
+                  stroke="#1e40af"
                   strokeWidth={1}
+                  animationDuration={800}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -368,8 +454,8 @@ export default function AdminDashboard() {
 
           <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
             <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Status Distribution</h2>
-              <p className="text-xs sm:text-sm text-gray-600">DA users by status</p>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-1">Development Agent Status Distribution</h2>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">Distribution of Development Agents by operational status</p>
             </div>
             <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px]">
               <PieChart>
@@ -378,38 +464,72 @@ export default function AdminDashboard() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={false}
                   outerRadius="70%"
-                  innerRadius="30%"
+                  innerRadius="40%"
                   fill="#8884d8"
                   dataKey="value"
                   paddingAngle={2}
+                  animationDuration={800}
                 >
-                  {pieData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[index % COLORS.length]}
-                      stroke="#ffffff"
-                      strokeWidth={2}
-                    />
-                  ))}
+                  {pieData.map((entry, index) => {
+                    // Professional solid colors
+                    let fillColor = '#6b7280'; // Default gray
+                    if (entry.name === 'Active') {
+                      fillColor = '#059669'; // Professional green
+                    } else if (entry.name === 'Inactive') {
+                      fillColor = '#6b7280'; // Professional gray
+                    }
+                    return (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={fillColor}
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#ffffff', 
                     border: '1px solid #d1d5db', 
-                    borderRadius: '8px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    padding: '12px',
-                    fontSize: '13px'
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    padding: '12px 16px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
                   }}
-                  formatter={(value: any) => [value.toLocaleString(), 'Count']}
+                  formatter={(value: any, name: string, props: any) => {
+                    const total = pieData.reduce((sum, item) => sum + item.value, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                    return [`${value.toLocaleString()} (${percentage}%)`, 'Count'];
+                  }}
+                  labelStyle={{ 
+                    color: '#111827', 
+                    fontWeight: 600, 
+                    fontSize: '13px', 
+                    marginBottom: '6px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}
                 />
                 <Legend 
                   verticalAlign="bottom" 
-                  height={36}
-                  wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                  height={50}
+                  wrapperStyle={{ 
+                    paddingTop: '24px', 
+                    fontSize: '13px', 
+                    fontWeight: 500,
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}
                   iconType="circle"
+                  formatter={(value: string) => {
+                    const entry = pieData.find(d => d.name === value);
+                    const total = pieData.reduce((sum, item) => sum + item.value, 0);
+                    const percentage = entry && total > 0 ? ((entry.value / total) * 100).toFixed(1) : '0';
+                    return `${value}: ${entry?.value.toLocaleString() || 0} (${percentage}%)`;
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>

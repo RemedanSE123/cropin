@@ -12,12 +12,14 @@ interface DAUser {
   zone: string;
   woreda: string;
   kebele: string;
-  contactnumber: string;
+  contact_number: string;
   reporting_manager_name: string;
   reporting_manager_mobile: string;
   language: string;
-  total_collected_data: number;
+  total_data_collected: number;
   status: string;
+  last_updated?: string;
+  created_at?: string;
 }
 
 export default function RegionalManagerDashboard() {
@@ -96,17 +98,16 @@ export default function RegionalManagerDashboard() {
 
   // Calculate KPIs for the region
   const totalDAs = daUsers.length;
-  const totalData = daUsers.reduce((sum, da) => sum + (da.total_collected_data || 0), 0);
+  const totalData = daUsers.reduce((sum, da) => sum + (da.total_data_collected || 0), 0);
   const activeDAs = daUsers.filter(da => da.status === 'Active').length;
   const inactiveDAs = daUsers.filter(da => da.status === 'Inactive').length;
-  const pendingDAs = daUsers.filter(da => da.status === 'Pending').length;
   const avgDataPerDA = totalDAs > 0 ? Math.round(totalData / totalDAs) : 0;
 
   // Prepare chart data with pagination (10 items per page)
   const chartDataAll = daUsers.map(da => ({
     name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name,
     fullName: da.name, // Keep full name for tooltip
-    'Data Collected': da.total_collected_data || 0,
+    'Data Collected': da.total_data_collected || 0,
   }));
 
   const itemsPerChartPage = 10;
@@ -121,7 +122,7 @@ export default function RegionalManagerDashboard() {
     daUsers.forEach(da => {
       if (da.woreda) {
         const current = woredaMap.get(da.woreda) || 0;
-        woredaMap.set(da.woreda, current + (da.total_collected_data || 0));
+        woredaMap.set(da.woreda, current + (da.total_data_collected || 0));
       }
     });
     
@@ -138,7 +139,7 @@ export default function RegionalManagerDashboard() {
     const daArray = daUsers
       .map(da => ({
         name: da.name,
-        total: da.total_collected_data || 0,
+        total: da.total_data_collected || 0,
       }))
       .sort((a, b) => b.total - a.total);
     
@@ -225,7 +226,7 @@ export default function RegionalManagerDashboard() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Total DAs</h3>
@@ -274,19 +275,6 @@ export default function RegionalManagerDashboard() {
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-gray-900">{inactiveDAs.toLocaleString()}</p>
             <p className="text-xs text-gray-500 mt-1">{totalDAs > 0 ? Math.round((inactiveDAs / totalDAs) * 100) : 0}%</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Pending DAs</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingDAs.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">{totalDAs > 0 ? Math.round((pendingDAs / totalDAs) * 100) : 0}%</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-500 hover:shadow-lg transition-shadow">

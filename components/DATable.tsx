@@ -8,17 +8,19 @@ interface DAUser {
   zone: string;
   woreda: string;
   kebele: string;
-  contactnumber: string;
+  contact_number: string;
   reporting_manager_name: string;
   reporting_manager_mobile: string;
   language: string;
-  total_collected_data: number;
+  total_data_collected: number;
   status: string;
+  last_updated?: string;
+  created_at?: string;
 }
 
 interface DATableProps {
   daUsers: DAUser[];
-  onUpdate: (contactnumber: string, field: 'total_collected_data' | 'status', value: any) => void;
+  onUpdate: (contact_number: string, field: 'total_data_collected' | 'status', value: any) => void;
   isEditable: boolean;
 }
 
@@ -35,9 +37,9 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     setIsAdmin(woredaRepPhone === 'Admin@123' && isAdminFlag === true);
   }, []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<'total_collected_data' | 'status' | null>(null);
+  const [sortField, setSortField] = useState<'total_data_collected' | 'status' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [editingCell, setEditingCell] = useState<{ contactnumber: string; field: string } | null>(null);
+  const [editingCell, setEditingCell] = useState<{ contact_number: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,7 +51,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
   // Advanced search filters
   const [advancedSearch, setAdvancedSearch] = useState({
     name: '',
-    contactnumber: '',
+    contact_number: '',
     reporting_manager_name: '',
     reporting_manager_mobile: '',
     language: '',
@@ -125,7 +127,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     setCurrentPage(1);
   };
 
-  const handleSort = (field: 'total_collected_data' | 'status') => {
+  const handleSort = (field: 'total_data_collected' | 'status') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -156,7 +158,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     if (searchTerm) {
       filtered = filtered.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.contactnumber.includes(searchTerm)
+        user.contact_number.includes(searchTerm)
       );
     }
 
@@ -166,9 +168,9 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
         u.name.toLowerCase().includes(advancedSearch.name.toLowerCase())
       );
     }
-    if (advancedSearch.contactnumber) {
-      filtered = filtered.filter(u => 
-        u.contactnumber.includes(advancedSearch.contactnumber)
+    if (advancedSearch.contact_number) {
+      filtered = filtered.filter(u =>
+        u.contact_number.includes(advancedSearch.contact_number)
       );
     }
     if (advancedSearch.reporting_manager_name) {
@@ -187,28 +189,70 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
       );
     }
     if (advancedSearch.status) {
-      filtered = filtered.filter(u => u.status === advancedSearch.status);
+      filtered = filtered.filter(u => {
+        const normalizedStatus = u.status === 'Active' ? 'Active' : 'Inactive';
+        return normalizedStatus === advancedSearch.status;
+      });
     }
 
-    // Sorting
+    // Custom sorting: Active first, then by total_data_collected DESC, then alphabetically
+    // Clean/trim names before sorting
+    filtered.sort((a, b) => {
+      // Helper function to clean and trim names
+      const cleanName = (name: string) => (name || '').trim();
+      
+      // Normalize status
+      const aStatus = a.status === 'Active' ? 'Active' : 'Inactive';
+      const bStatus = b.status === 'Active' ? 'Active' : 'Inactive';
+      
+      // First: Active users come first
+      if (aStatus !== bStatus) {
+        return aStatus === 'Active' ? -1 : 1;
+      }
+      
+      // If both are Active, sort by total_data_collected DESC, then alphabetically
+      if (aStatus === 'Active' && bStatus === 'Active') {
+        const aData = a.total_data_collected || 0;
+        const bData = b.total_data_collected || 0;
+        
+        // First by total_data_collected (descending)
+        if (aData !== bData) {
+          return bData - aData;
+        }
+        
+        // If equal, then alphabetically by name (A-Z first, then Amharic)
+        const aName = cleanName(a.name || '');
+        const bName = cleanName(b.name || '');
+        return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+      }
+      
+      // If both are Inactive, sort alphabetically by name
+      const aName = cleanName(a.name || '');
+      const bName = cleanName(b.name || '');
+      return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+    });
+
+    // Apply manual sort if user clicked on a column header
     if (sortField) {
-      filtered.sort((a, b) => {
-    if (sortField === 'total_collected_data') {
-      const aVal = a.total_collected_data || 0;
-      const bVal = b.total_collected_data || 0;
-      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-    }
-    
-    if (sortField === 'status') {
-      const aStr = String(a.status || '').toLowerCase();
-      const bStr = String(b.status || '').toLowerCase();
-      return sortDirection === 'asc' 
-        ? aStr.localeCompare(bStr)
-        : bStr.localeCompare(aStr);
-    }
-    
-    return 0;
-  });
+      if (sortField === 'total_data_collected') {
+        filtered.sort((a, b) => {
+          const aVal = a.total_data_collected || 0;
+          const bVal = b.total_data_collected || 0;
+          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+      } else if (sortField === 'status') {
+        // Status sorting is already handled by default sort above
+        // But if user explicitly sorts by status, respect their choice
+        filtered.sort((a, b) => {
+          const aStatus = a.status === 'Active' ? 'Active' : 'Inactive';
+          const bStatus = b.status === 'Active' ? 'Active' : 'Inactive';
+          if (sortDirection === 'asc') {
+            return aStatus.localeCompare(bStatus);
+          } else {
+            return bStatus.localeCompare(aStatus);
+          }
+        });
+      }
     }
 
     return filtered;
@@ -227,42 +271,73 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
 
   // Update local data when daUsers prop changes
   useEffect(() => {
-    setLocalUserData(daUsers);
-    setOriginalUserData(daUsers);
+    // Normalize status and clean/trim names
+    const normalizedUsers = daUsers.map(user => ({
+      ...user,
+      name: (user.name || '').trim(),
+      status: user.status === 'Active' ? 'Active' : 'Inactive'
+    }));
+    
+    // Sort: Active first, then by total_data_collected DESC, then alphabetically
+    normalizedUsers.sort((a, b) => {
+      const aStatus = a.status === 'Active' ? 'Active' : 'Inactive';
+      const bStatus = b.status === 'Active' ? 'Active' : 'Inactive';
+      
+      // Active users first
+      if (aStatus !== bStatus) {
+        return aStatus === 'Active' ? -1 : 1;
+      }
+      
+      // If both Active, sort by total_data_collected DESC, then alphabetically
+      if (aStatus === 'Active' && bStatus === 'Active') {
+        const aData = a.total_data_collected || 0;
+        const bData = b.total_data_collected || 0;
+        if (aData !== bData) {
+          return bData - aData;
+        }
+        return (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
+      }
+      
+      // If both Inactive, sort alphabetically
+      return (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
+    });
+    
+    setLocalUserData(normalizedUsers);
+    setOriginalUserData(normalizedUsers);
   }, [daUsers]);
 
-  const handleEditStart = (contactnumber: string, field: string, currentValue: any) => {
-    if (!isEditable || (field !== 'total_collected_data' && field !== 'status')) {
+  const handleEditStart = (contact_number: string, field: string, currentValue: any) => {
+    if (!isEditable || (field !== 'total_data_collected' && field !== 'status')) {
       return;
     }
-    // For total_collected_data, only allow editing if status is Active
-    if (field === 'total_collected_data') {
-      const user = localUserData.find(u => u.contactnumber === contactnumber);
+    // For total_data_collected, only allow editing if status is Active
+    if (field === 'total_data_collected') {
+      const user = localUserData.find(u => u.contact_number === contact_number);
       if (user?.status !== 'Active') {
         return;
       }
     }
-    setEditingCell({ contactnumber, field });
+    setEditingCell({ contact_number, field });
     setEditValue(String(currentValue || ''));
   };
 
   const handleEditSave = async () => {
     if (editingCell) {
-      const value = editingCell.field === 'total_collected_data' 
+      const value = editingCell.field === 'total_data_collected' 
         ? parseInt(editValue) || 0
         : editValue;
       
       // Optimistic update - update local state immediately
       setLocalUserData(prevUsers => 
         prevUsers.map(user => 
-          user.contactnumber === editingCell.contactnumber
+          user.contact_number === editingCell.contact_number
             ? { ...user, [editingCell.field]: value }
             : user
         )
       );
       
       // Mark as updating
-      setUpdatingUsers(prev => new Set(prev).add(editingCell.contactnumber));
+      setUpdatingUsers(prev => new Set(prev).add(editingCell.contact_number));
       
       // Clear editing state immediately for better UX
       setEditingCell(null);
@@ -270,16 +345,16 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
       
       // Call the update function
       try {
-        await onUpdate(editingCell.contactnumber, editingCell.field as 'total_collected_data' | 'status', value);
+        await onUpdate(editingCell.contact_number, editingCell.field as 'total_data_collected' | 'status', value);
       } catch (error) {
         // Revert on error - restore original value
-        const originalUser = originalUserData.find(u => u.contactnumber === editingCell.contactnumber);
+        const originalUser = originalUserData.find(u => u.contact_number === editingCell.contact_number);
         if (originalUser) {
           setLocalUserData(prevUsers => 
             prevUsers.map(user => 
-              user.contactnumber === editingCell.contactnumber
-                ? { ...user, [editingCell.field]: editingCell.field === 'total_collected_data' 
-                    ? originalUser.total_collected_data
+              user.contact_number === editingCell.contact_number
+                ? { ...user, [editingCell.field]: editingCell.field === 'total_data_collected' 
+                    ? originalUser.total_data_collected
                     : originalUser.status }
                 : user
             )
@@ -289,7 +364,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
         // Remove from updating set
         setUpdatingUsers(prev => {
           const newSet = new Set(prev);
-          newSet.delete(editingCell.contactnumber);
+          newSet.delete(editingCell.contact_number);
           return newSet;
         });
       }
@@ -301,20 +376,20 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     setEditValue('');
   };
 
-  const SortIcon = ({ field }: { field: 'total_collected_data' | 'status' }) => {
+  const SortIcon = ({ field }: { field: 'total_data_collected' | 'status' }) => {
     if (sortField !== field) return <span className="text-gray-300 ml-2 text-sm">↕</span>;
     return sortDirection === 'asc' ? <span className="ml-2 text-white text-sm">↑</span> : <span className="ml-2 text-white text-sm">↓</span>;
   };
 
-  const toggleExpand = (contactnumber: string) => {
-    setExpandedRow(expandedRow === contactnumber ? null : contactnumber);
+  const toggleExpand = (contact_number: string) => {
+    setExpandedRow(expandedRow === contact_number ? null : contact_number);
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setAdvancedSearch({
       name: '',
-      contactnumber: '',
+      contact_number: '',
       reporting_manager_name: '',
       reporting_manager_mobile: '',
       language: '',
@@ -449,9 +524,9 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                 <input
                   type="text"
                   placeholder="Search by contact..."
-                  value={advancedSearch.contactnumber}
+                  value={advancedSearch.contact_number}
                   onChange={(e) => {
-                    setAdvancedSearch({ ...advancedSearch, contactnumber: e.target.value });
+                    setAdvancedSearch({ ...advancedSearch, contact_number: e.target.value });
                     handleFilterChange();
                   }}
                   className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -509,7 +584,6 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                   <option value="">All Statuses</option>
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
-                  <option value="Pending">Pending</option>
                 </select>
               </div>
             </div>
@@ -531,13 +605,13 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                 Contact Number
               </th>
               <th 
-                onClick={() => handleSort('total_collected_data')}
+                onClick={() => handleSort('total_data_collected')}
                 className="px-4 sm:px-5 md:px-6 py-4 text-left text-xs font-semibold text-slate-100 uppercase tracking-wide cursor-pointer hover:bg-slate-700 transition-colors border-r border-slate-700"
               >
                 <div className="flex items-center gap-2">
                   <span>Total Data Collected</span>
                   {isEditable && <span className="text-xs text-slate-400 font-normal normal-case">(Editable)</span>}
-                  <SortIcon field="total_collected_data" />
+                  <SortIcon field="total_data_collected" />
                 </div>
               </th>
               <th 
@@ -566,7 +640,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
             ) : (
               paginatedUsers.map((user, index) => (
                 <>
-                  <tr key={user.contactnumber} className="hover:bg-slate-50 transition-colors duration-150 border-b border-gray-100">
+                  <tr key={user.contact_number} className="hover:bg-slate-50 transition-colors duration-150 border-b border-gray-100">
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white text-center">
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded bg-slate-100 text-slate-700 text-xs font-medium">
                         {startIndex + index + 1}
@@ -576,7 +650,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                       <div className="text-sm font-medium text-slate-900">{user.name || 'N/A'}</div>
                     </td>
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white">
-                      <div className="text-sm text-slate-600 font-mono">{user.contactnumber || 'N/A'}</div>
+                      <div className="text-sm text-slate-600 font-mono">{user.contact_number || 'N/A'}</div>
                     </td>
                     <td
                       className={`px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white ${
@@ -584,11 +658,11 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                       }`}
                       onClick={() => {
                         if (isEditable && user.status === 'Active') {
-                          handleEditStart(user.contactnumber, 'total_collected_data', user.total_collected_data);
+                          handleEditStart(user.contact_number, 'total_data_collected', user.total_data_collected);
                         }
                       }}
                     >
-                      {editingCell?.contactnumber === user.contactnumber && editingCell?.field === 'total_collected_data' ? (
+                      {editingCell?.contact_number === user.contact_number && editingCell?.field === 'total_data_collected' ? (
                         <div className="flex items-center">
                           <input
                             type="number"
@@ -608,9 +682,9 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                           isEditable && user.status === 'Active'
                             ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                             : 'text-slate-600 bg-slate-50 border-slate-200'
-                        } ${updatingUsers.has(user.contactnumber) ? 'opacity-60' : ''}`}>
-                          {(user.total_collected_data || 0).toLocaleString()}
-                          {updatingUsers.has(user.contactnumber) && (
+                        } ${updatingUsers.has(user.contact_number) ? 'opacity-60' : ''}`}>
+                          {(user.total_data_collected || 0).toLocaleString()}
+                          {updatingUsers.has(user.contact_number) && (
                             <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                           )}
                         </div>
@@ -619,82 +693,105 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white">
                       {isEditable ? (
                           <select
-                          value={user.status || 'Pending'}
+                          value={user.status === 'Active' ? 'Active' : 'Inactive'}
                           onChange={async (e) => {
                             const newStatus = e.target.value;
-                            // Optimistic update
-                            setLocalUserData(prevUsers => 
-                              prevUsers.map(u => 
-                                u.contactnumber === user.contactnumber
+                            // Helper function to sort users
+                            const sortUsers = (users: DAUser[]) => {
+                              return [...users].sort((a, b) => {
+                                const aStatus = a.status === 'Active' ? 'Active' : 'Inactive';
+                                const bStatus = b.status === 'Active' ? 'Active' : 'Inactive';
+                                
+                                // Active users first
+                                if (aStatus !== bStatus) {
+                                  return aStatus === 'Active' ? -1 : 1;
+                                }
+                                
+                                // If both Active, sort by total_data_collected DESC, then alphabetically
+                                if (aStatus === 'Active' && bStatus === 'Active') {
+                                  const aData = a.total_data_collected || 0;
+                                  const bData = b.total_data_collected || 0;
+                                  if (aData !== bData) {
+                                    return bData - aData;
+                                  }
+                                  return (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
+                                }
+                                
+                                // If both Inactive, sort alphabetically
+                                return (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
+                              });
+                            };
+                            
+                            // Optimistic update with reordering
+                            setLocalUserData(prevUsers => {
+                              const updated = prevUsers.map(u => 
+                                u.contact_number === user.contact_number
                                   ? { ...u, status: newStatus }
                                   : u
-                              )
-                            );
-                            setUpdatingUsers(prev => new Set(prev).add(user.contactnumber));
+                              );
+                              return sortUsers(updated);
+                            });
+                            setUpdatingUsers(prev => new Set(prev).add(user.contact_number));
                             try {
-                              await onUpdate(user.contactnumber, 'status', newStatus);
+                              await onUpdate(user.contact_number, 'status', newStatus);
                             } catch (error) {
                               // Revert on error
-                              const originalUser = originalUserData.find(u => u.contactnumber === user.contactnumber);
+                              const originalUser = originalUserData.find(u => u.contact_number === user.contact_number);
                               if (originalUser) {
-                                setLocalUserData(prevUsers => 
-                                  prevUsers.map(u => 
-                                    u.contactnumber === user.contactnumber
-                                      ? { ...u, status: originalUser.status || 'Pending' }
+                                setLocalUserData(prevUsers => {
+                                  const reverted = prevUsers.map(u => 
+                                    u.contact_number === user.contact_number
+                                      ? { ...u, status: originalUser.status === 'Active' ? 'Active' : 'Inactive' }
                                       : u
-                                  )
-                                );
+                                  );
+                                  return sortUsers(reverted);
+                                });
                               }
                             } finally {
                               setUpdatingUsers(prev => {
                                 const newSet = new Set(prev);
-                                newSet.delete(user.contactnumber);
+                                newSet.delete(user.contact_number);
                                 return newSet;
                               });
                             }
                           }}
-                          disabled={updatingUsers.has(user.contactnumber)}
+                          disabled={updatingUsers.has(user.contact_number)}
                           className={`px-3 py-1.5 text-xs font-medium rounded border focus:outline-none focus:ring-2 transition-colors ${
                             user.status === 'Active'
                               ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-500'
-                              : user.status === 'Inactive'
-                              ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100 focus:ring-red-500'
-                              : 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 focus:ring-amber-500'
-                          } ${updatingUsers.has(user.contactnumber) ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
+                              : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100 focus:ring-red-500'
+                          } ${updatingUsers.has(user.contact_number) ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
                         >
-                          <option value="Active" className="bg-white text-emerald-700">Active</option>
                           <option value="Inactive" className="bg-white text-red-700">Inactive</option>
-                          <option value="Pending" className="bg-white text-amber-700">Pending</option>
-                          </select>
+                          <option value="Active" className="bg-white text-emerald-700">Active</option>
+                        </select>
                       ) : (
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${
                           user.status === 'Active' 
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                            : user.status === 'Inactive' 
-                            ? 'bg-red-100 text-red-800 border border-red-200' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
                         }`}>
-                          {user.status || 'N/A'}
+                          {user.status === 'Active' ? 'Active' : 'Inactive'}
                         </span>
                       )}
                     </td>
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white">
                       <button
-                        onClick={() => toggleExpand(user.contactnumber)}
+                        onClick={() => toggleExpand(user.contact_number)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-md hover:bg-slate-200 hover:border-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {expandedRow === user.contactnumber ? (
+                          {expandedRow === user.contact_number ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                           ) : (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           )}
                         </svg>
-                        <span>{expandedRow === user.contactnumber ? 'Hide' : 'View'}</span>
+                        <span>{expandedRow === user.contact_number ? 'Hide' : 'View'}</span>
                       </button>
                     </td>
                   </tr>
-                  {expandedRow === user.contactnumber && (
+                  {expandedRow === user.contact_number && (
                     <tr>
                       <td colSpan={6} className="px-4 sm:px-6 md:px-8 py-5 bg-slate-50 border-b border-gray-200">
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -716,7 +813,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                           </div>
                           <div className="bg-white p-4 rounded-md border border-slate-200">
                             <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Contact Number</p>
-                            <p className="text-sm font-mono font-semibold text-slate-900">{user.contactnumber || 'N/A'}</p>
+                            <p className="text-sm font-mono font-semibold text-slate-900">{user.contact_number || 'N/A'}</p>
                           </div>
                           <div className="bg-white p-4 rounded-md border border-slate-200">
                             <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Reporting Manager</p>

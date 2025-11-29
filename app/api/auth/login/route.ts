@@ -70,10 +70,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optimized query - only select needed columns, use index on phone_number
-    // Using LIMIT 1 for faster query termination
+    // Check if phone number exists as reporting_manager_mobile in da_users table
+    // Get distinct manager info (in case same manager has multiple DAs)
     const result = await pool.query(
-      'SELECT name, phone_number FROM woreda_reps WHERE phone_number = $1 LIMIT 1',
+      'SELECT DISTINCT reporting_manager_name, reporting_manager_mobile FROM da_users WHERE reporting_manager_mobile = $1 LIMIT 1',
       [phoneNumber]
     );
 
@@ -84,18 +84,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const woredaRep = result.rows[0];
+    const manager = result.rows[0];
 
     // Generate token
     const token = Buffer.from(JSON.stringify({
-      phoneNumber: woredaRep.phone_number,
+      phoneNumber: manager.reporting_manager_mobile,
       isAdmin: false
     })).toString('base64');
 
     return NextResponse.json({
       token,
-      woredaRepPhone: woredaRep.phone_number,
-      name: woredaRep.name,
+      woredaRepPhone: manager.reporting_manager_mobile,
+      name: manager.reporting_manager_name || 'Woreda Manager',
       isAdmin: false,
     }, { status: 200 });
   } catch (error) {

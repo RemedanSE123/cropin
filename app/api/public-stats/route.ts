@@ -9,12 +9,11 @@ export async function GET() {
     const statsQuery = `
       SELECT 
         COUNT(*) as total_das,
-        COALESCE(SUM(total_collected_data), 0) as total_data,
+        COALESCE(SUM(total_data_collected), 0) as total_data,
         COUNT(DISTINCT reporting_manager_mobile) as total_reps,
         COUNT(CASE WHEN LOWER(status) = 'active' THEN 1 END) as active_das,
         COUNT(CASE WHEN LOWER(status) = 'inactive' THEN 1 END) as inactive_das,
-        COUNT(CASE WHEN LOWER(status) = 'pending' THEN 1 END) as pending_das,
-        AVG(total_collected_data) as avg_data_per_da
+        AVG(total_data_collected) as avg_data_per_da
       FROM da_users
     `;
     const statsResult = await pool.query(statsQuery);
@@ -23,14 +22,14 @@ export async function GET() {
     console.log('=== STATS QUERY RESULTS ===');
     console.log('Raw stats from DB:', JSON.stringify(stats, null, 2));
 
-    // Diagnostic: Check if total_collected_data has any non-zero values
+    // Diagnostic: Check if total_data_collected has any non-zero values
     const diagnosticQuery = await pool.query(`
       SELECT 
         COUNT(*) as total_rows,
-        COUNT(CASE WHEN total_collected_data > 0 THEN 1 END) as rows_with_data,
-        SUM(total_collected_data) as grand_total,
-        MAX(total_collected_data) as max_data,
-        MIN(total_collected_data) as min_data
+        COUNT(CASE WHEN total_data_collected > 0 THEN 1 END) as rows_with_data,
+        SUM(total_data_collected) as grand_total,
+        MAX(total_data_collected) as max_data,
+        MIN(total_data_collected) as min_data
       FROM da_users
     `);
     console.log('=== DATABASE DIAGNOSTIC ===');
@@ -42,7 +41,7 @@ export async function GET() {
       SELECT 
         region,
         COUNT(*) as da_count,
-        COALESCE(SUM(total_collected_data), 0) as total_data
+        COALESCE(SUM(total_data_collected), 0) as total_data
       FROM da_users
       WHERE region IS NOT NULL AND region != ''
       GROUP BY region
@@ -62,14 +61,26 @@ export async function GET() {
       SELECT 
         zone,
         COUNT(*) as da_count,
-        COALESCE(SUM(total_collected_data), 0) as total_data
+        COALESCE(SUM(total_data_collected), 0) as total_data
       FROM da_users
-      WHERE zone IS NOT NULL AND zone != '' AND zone IS NOT NULL
+      WHERE zone IS NOT NULL AND zone != ''
       GROUP BY zone
       ORDER BY total_data DESC
-      LIMIT 10
     `;
     const zoneResult = await pool.query(zoneDataQuery);
+    
+    // Get woreda data
+    const woredaDataQuery = `
+      SELECT 
+        woreda,
+        COUNT(*) as da_count,
+        COALESCE(SUM(total_data_collected), 0) as total_data
+      FROM da_users
+      WHERE woreda IS NOT NULL AND woreda != ''
+      GROUP BY woreda
+      ORDER BY total_data DESC
+    `;
+    const woredaResult = await pool.query(woredaDataQuery);
     console.log('Zone data from direct query:', zoneResult.rows.length, 'rows');
     
     // Log first few rows for debugging
@@ -83,7 +94,7 @@ export async function GET() {
       SELECT 
         status,
         COUNT(*) as count,
-        COALESCE(SUM(total_collected_data), 0) as total_data
+        COALESCE(SUM(total_data_collected), 0) as total_data
       FROM da_users
       GROUP BY status
     `;
@@ -97,12 +108,12 @@ export async function GET() {
         region,
         zone,
         woreda,
-        total_collected_data,
+        total_data_collected,
         status,
         reporting_manager_name
       FROM da_users
-      WHERE total_collected_data > 0
-      ORDER BY total_collected_data DESC
+      WHERE total_data_collected > 0
+      ORDER BY total_data_collected DESC
       LIMIT 5
     `;
     const topDAsResult = await pool.query(topDAsQuery);
@@ -131,6 +142,17 @@ export async function GET() {
       };
     });
 
+    const formattedWoredaData = woredaResult.rows.map(row => {
+      const totalData = row.total_data != null ? (typeof row.total_data === 'string' ? parseFloat(row.total_data) : Number(row.total_data)) : 0;
+      const daCount = row.da_count != null ? (typeof row.da_count === 'string' ? parseInt(row.da_count) : Number(row.da_count)) : 0;
+      
+      return {
+        woreda: (row.woreda || 'Unknown').trim(),
+        da_count: isNaN(daCount) ? 0 : daCount,
+        total_data: isNaN(totalData) ? 0 : totalData,
+      };
+    });
+
     console.log('Formatted region data count:', formattedRegionData.length);
     console.log('Formatted region data sample:', JSON.stringify(formattedRegionData.slice(0, 3), null, 2));
     console.log('Formatted zone data count:', formattedZoneData.length);
@@ -143,7 +165,6 @@ export async function GET() {
       totalReps: stats.total_reps != null ? (typeof stats.total_reps === 'string' ? parseInt(stats.total_reps) : Number(stats.total_reps)) : 0,
       activeDAs: stats.active_das != null ? (typeof stats.active_das === 'string' ? parseInt(stats.active_das) : Number(stats.active_das)) : 0,
       inactiveDAs: stats.inactive_das != null ? (typeof stats.inactive_das === 'string' ? parseInt(stats.inactive_das) : Number(stats.inactive_das)) : 0,
-      pendingDAs: stats.pending_das != null ? (typeof stats.pending_das === 'string' ? parseInt(stats.pending_das) : Number(stats.pending_das)) : 0,
       avgDataPerDA: stats.avg_data_per_da != null ? (typeof stats.avg_data_per_da === 'string' ? parseFloat(stats.avg_data_per_da) : Number(stats.avg_data_per_da)) : 0,
     };
 
@@ -152,7 +173,8 @@ export async function GET() {
     return NextResponse.json({
       stats: formattedStats,
       regionData: formattedRegionData, // All regions, not just top 5
-      zoneData: formattedZoneData,
+      zoneData: formattedZoneData, // All zones
+      woredaData: formattedWoredaData, // All woredas
       statusTrend: trendResult.rows,
       topDAs: topDAsResult.rows,
     });

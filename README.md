@@ -4,20 +4,23 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 
 ## Features
 
-- **Login System**: Woreda Representatives login using phone number with fixed password "123"
-- **Dashboard Overview**: View all DA users connected to the logged-in Woreda Representative
-- **Editable Fields**: Woreda Reps can edit only their DA users' total data collected and status
+- **Login System**: 
+  - Admin login: `Admin@123` / `Admin@123`
+  - Regional Manager login: `tigray@123`, `south@123`, `sidama@123`, `ce@123`, `amhara@123`, `oromiya@123` (password: `123`)
+  - Woreda Manager login: Phone number from `reporting_manager_mobile` field (password: `123`)
+- **Dashboard Overview**: View all DA users connected to the logged-in manager
+- **Editable Fields**: Woreda Managers can edit only their DA users' total data collected and status (Active/Inactive only)
 - **KPI Cards**: Display key performance indicators
-- **Global View**: View all DA data from all reps with filters by region, zone, and woreda
+- **Regional Manager Dashboard**: Read-only view for regional managers with graphs and statistics
 - **Support/Report**: Link to Google Form for support and reporting issues
-- **Responsive Design**: Works on desktop and mobile devices
-- **Charts**: Visual representation of data collection
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Charts**: Visual representation of data collection with pagination
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React, TypeScript, TailwindCSS
 - **Backend**: Next.js API Routes
-- **Database**: PostgreSQL (Neon)
+- **Database**: PostgreSQL (Local)
 - **Charts**: Recharts
 
 ## Setup Instructions
@@ -27,35 +30,37 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
    npm install
    ```
 
-2. **Environment Variables**
+2. **Database Setup**
+   - Create a PostgreSQL database (e.g., `cropin_grow`)
+   - Run the SQL script in `database/schema.sql` to create the table and indexes
+   - The script creates the `da_users` table with all required columns and indexes
+
+3. **Environment Variables**
    Create a `.env.local` file in the root directory:
    ```
-   DATABASE_URL=postgresql://Ethiopian%20Map%20System_owner:npg_wLSNX7Qg6hDi@ep-autumn-frost-a8zg2v20-pooler.eastus2.azure.neon.tech/cropin?sslmode=require&channel_binding=require
+   DATABASE_URL=postgresql://username:password@localhost:5432/cropin_grow
    ```
    
-   Note: The database URL is already configured in `lib/db.ts` as a fallback, but it's recommended to use environment variables in production.
+   Replace `username`, `password`, and `cropin_grow` with your actual PostgreSQL credentials and database name.
 
-3. **Database Schema**
-   Ensure your PostgreSQL database has the following tables:
-   
-   - `woreda_reps`: Contains Woreda Representative information
-     - `id` (primary key)
-     - `name`
-     - `phone_number`
+4. **Database Schema**
+   The system uses a single table:
    
    - `da_users`: Contains Development Agent information
-     - `id` (primary key)
-     - `name`
-     - `region`
-     - `zone`
-     - `woreda`
-     - `kebele`
-     - `contactnumber`
-     - `reporting_manager_name`
-     - `reporting_manager_mobile` (links to `woreda_reps.phone_number`)
-     - `language`
-     - `total_collected_data` (integer, default 0)
-     - `status` (text, e.g., 'Active', 'Inactive', 'Pending')
+     - `id` (SERIAL PRIMARY KEY)
+     - `region` (TEXT)
+     - `zone` (TEXT)
+     - `woreda` (TEXT)
+     - `kebele` (TEXT)
+     - `contact_number` (TEXT)
+     - `name` (TEXT)
+     - `reporting_manager_name` (TEXT)
+     - `reporting_manager_mobile` (TEXT) - Used for Woreda Manager login
+     - `language` (TEXT)
+     - `total_data_collected` (INT DEFAULT 0)
+     - `last_updated` (TIMESTAMP)
+     - `status` (VARCHAR(10) DEFAULT 'inactive') - Only 'Active' or 'Inactive'
+     - `created_at` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
 
 4. **Run Development Server**
    ```bash
@@ -67,10 +72,13 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 
 ## Usage
 
-1. **Login**: Use a Woreda Representative phone number and password "123"
+1. **Login**: 
+   - **Admin**: Use `Admin@123` / `Admin@123` for full access
+   - **Regional Manager**: Use region username (e.g., `tigray@123`) / `123` for read-only regional access
+   - **Woreda Manager**: Use phone number from `reporting_manager_mobile` field / `123` for managing assigned DAs
 2. **Dashboard**: View your DA users, KPIs, and charts
-3. **Edit Data**: Click on "Total Data" or "Status" columns to edit (only for your DA users)
-4. **Global View**: Switch to the Global View tab to see all DA users with filters
+3. **Edit Data**: Click on "Total Data" or "Status" columns to edit (only for Woreda Managers, only when status is Active)
+4. **Status**: Only two statuses available - 'Active' and 'Inactive' (no Pending)
 5. **Support**: Click the "Support / Report" button to access the Google Form
 
 ## Project Structure
@@ -79,31 +87,49 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 ├── app/
 │   ├── api/
 │   │   ├── auth/
-│   │   │   └── login/          # Login API
+│   │   │   └── login/          # Login API (handles Admin, Regional Manager, Woreda Manager)
 │   │   ├── da-users/           # DA users CRUD API
 │   │   ├── kpis/               # KPI data API
+│   │   ├── public-stats/       # Public statistics API
 │   │   └── filters/            # Filter options API
-│   ├── dashboard/              # Dashboard page
+│   ├── admin/                  # Admin dashboard page
+│   ├── dashboard/              # Woreda Manager dashboard page
+│   ├── regional-manager/       # Regional Manager dashboard page (read-only)
 │   ├── login/                  # Login page
 │   ├── layout.tsx              # Root layout
-│   ├── page.tsx                # Home page (redirects)
+│   ├── page.tsx                # Home page (public dashboard)
 │   └── globals.css             # Global styles
 ├── components/
-│   ├── DashboardContent.tsx    # Main dashboard component
+│   ├── DashboardContent.tsx    # Woreda Manager dashboard component
+│   ├── AdminDashboard.tsx      # Admin dashboard component
+│   ├── RegionalManagerDashboard.tsx  # Regional Manager dashboard component (read-only)
+│   ├── PublicDashboard.tsx     # Public dashboard component
 │   ├── KPICards.tsx            # KPI cards component
-│   ├── DATable.tsx             # DA users table component
-│   └── GlobalView.tsx          # Global view component
+│   └── DATable.tsx             # DA users table component
+├── database/
+│   └── schema.sql              # Database schema (run this in PostgreSQL)
 ├── lib/
-│   └── db.ts                   # Database connection
+│   └── db.ts                   # Database connection (uses DATABASE_URL)
 └── package.json
 ```
+
+## Database Schema
+
+The system uses a single table `da_users`. See `database/schema.sql` for the complete schema.
+
+**Key Points:**
+- Woreda Managers log in using their phone number (stored in `reporting_manager_mobile`)
+- No separate `woreda_reps` table - manager info is in `da_users` table
+- Status can only be 'Active' or 'Inactive' (default: 'inactive')
+- Column names: `contact_number` (not `contactnumber`), `total_data_collected` (not `total_collected_data`)
 
 ## Notes
 
 - The password is fixed as "123" for all users (as per requirements)
-- Only Woreda Representatives can edit their own DA users' data
-- The relationship between DA users and Woreda Reps is based on `reporting_manager_mobile` matching `phone_number`
-- The application uses client-side authentication with localStorage (for production, consider using secure HTTP-only cookies)
+- Only Woreda Managers can edit their own DA users' data (filtered by `reporting_manager_mobile`)
+- Regional Managers have read-only access to all DAs in their region
+- Admin has full access to all DAs
+- The application uses client-side authentication with localStorage
 
 ## Build for Production
 

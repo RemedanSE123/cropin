@@ -15,18 +15,18 @@ interface PublicStats {
     totalReps: number;
     activeDAs: number;
     inactiveDAs: number;
-    pendingDAs: number;
     avgDataPerDA: number;
   };
   regionData: Array<{ region: string; da_count: number; total_data: number }>;
   zoneData: Array<{ zone: string; da_count: number; total_data: number }>;
+  woredaData: Array<{ woreda: string; da_count: number; total_data: number }>;
   statusTrend: Array<{ status: string; count: number; total_data: number }>;
   topDAs: Array<{ 
     name: string; 
     region: string; 
     zone: string; 
     woreda: string;
-    total_collected_data: number; 
+    total_data_collected: number; 
     status: string;
     reporting_manager_name: string;
   }>;
@@ -45,12 +45,10 @@ const PROFESSIONAL_COLORS = {
 };
 
 const STATUS_COLORS: { [key: string]: string } = {
-  'Active': '#22543d',
+  'Active': '#22543d', // Professional dark green
   'active': '#22543d',
-  'Inactive': '#742a2a',
-  'inactive': '#742a2a',
-  'Pending': '#744210',
-  'pending': '#744210',
+  'Inactive': '#6b7280', // Professional gray
+  'inactive': '#6b7280',
 };
 
 // Custom Tooltip Component
@@ -75,6 +73,8 @@ export default function PublicDashboard() {
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [woredaPage, setWoredaPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     fetchStats();
@@ -86,6 +86,11 @@ export default function PublicDashboard() {
     }, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Reset pagination when stats change
+  useEffect(() => {
+    setWoredaPage(1);
+  }, [stats]);
 
   const fetchStats = async () => {
     try {
@@ -100,7 +105,6 @@ export default function PublicDashboard() {
           totalReps: data.stats?.totalReps,
           activeDAs: data.stats?.activeDAs,
           inactiveDAs: data.stats?.inactiveDAs,
-          pendingDAs: data.stats?.pendingDAs,
           avgDataPerDA: data.stats?.avgDataPerDA,
         });
         console.log('Region data count:', data.regionData?.length);
@@ -152,57 +156,49 @@ export default function PublicDashboard() {
     );
   }
 
-  // Prepare chart data with proper number conversion
-  // Use statusTrend from database if available, otherwise fall back to stats
-  console.log('=== PIE CHART DEBUG ===');
-  console.log('statusTrend raw:', JSON.stringify(stats.statusTrend, null, 2));
-  
-  const pieData = (stats.statusTrend && stats.statusTrend.length > 0) 
-    ? stats.statusTrend.map((item: any) => {
+  // Prepare chart data with proper normalization and deduplication
+  // Normalize status data to ensure no duplicates
+  const normalizedStatusData = (stats.statusTrend && stats.statusTrend.length > 0) 
+    ? stats.statusTrend.reduce((acc: any, item: any) => {
         const statusName = (item.status || 'Unknown').trim();
         const statusLower = statusName.toLowerCase();
         const count = Number(item.count) || 0;
         
-        console.log(`Processing status: "${statusName}" (lower: "${statusLower}"), count: ${count}`);
-        
-        // Map status to color
-        let color = STATUS_COLORS[statusName] || STATUS_COLORS[statusLower] || '#6b7280';
-        
-        // Normalize status name for display
-        let displayName = statusName;
+        // Normalize to standard names
+        let normalizedName = 'Inactive'; // Default
         if (statusLower === 'active') {
-          displayName = 'Active';
-          color = STATUS_COLORS['Active'];
+          normalizedName = 'Active';
         } else if (statusLower === 'inactive') {
-          displayName = 'Inactive';
-          color = STATUS_COLORS['Inactive'];
-        } else if (statusLower === 'pending') {
-          displayName = 'Pending';
-          color = STATUS_COLORS['Pending'];
+          normalizedName = 'Inactive';
         }
         
-        const pieItem = {
-          name: displayName,
-          value: count,
-          color: color,
-        };
-        
-        console.log('Created pie item:', pieItem);
-        return pieItem;
-      }).filter(item => {
-        const keep = item.value > 0;
-        if (!keep) {
-          console.log(`Filtered out pie item: ${item.name} (value: ${item.value})`);
+        // Accumulate counts for same normalized status
+        if (!acc[normalizedName]) {
+          acc[normalizedName] = 0;
         }
-        return keep;
-      })
-    : [
-        { name: 'Active', value: stats.stats.activeDAs || 0, color: STATUS_COLORS['Active'] },
-        { name: 'Inactive', value: stats.stats.inactiveDAs || 0, color: STATUS_COLORS['Inactive'] },
-        { name: 'Pending', value: stats.stats.pendingDAs || 0, color: STATUS_COLORS['Pending'] },
-      ].filter(item => item.value > 0);
+        acc[normalizedName] += count;
+        
+        return acc;
+      }, {})
+    : {
+        'Active': stats.stats.activeDAs || 0,
+        'Inactive': stats.stats.inactiveDAs || 0,
+      };
   
-  console.log('Final pieData:', pieData);
+  // Convert to array format with proper colors
+  const pieData = Object.entries(normalizedStatusData)
+    .map(([name, value]) => ({
+      name,
+      value: Number(value) || 0,
+      color: STATUS_COLORS[name] || '#6b7280',
+    }))
+    .filter(item => item.value > 0)
+    .sort((a, b) => {
+      // Sort: Active first, then Inactive
+      if (a.name === 'Active') return -1;
+      if (b.name === 'Active') return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   // Fix region data - ensure proper number conversion - Show ALL regions
   const regionChartData = (stats.regionData || []).map((r, index) => {
@@ -219,18 +215,27 @@ export default function PublicDashboard() {
     };
   }).sort((a, b) => b.data - a.data); // Sort by data descending, but show all
 
-  const zoneChartData = (stats.zoneData || []).map((z) => {
+  const allWoredaChartData = (stats.woredaData || []).map((w) => {
     // Handle PostgreSQL numeric types (can be string or number)
-    const totalData = z.total_data != null ? Number(z.total_data) : 0;
-    const daCount = z.da_count != null ? Number(z.da_count) : 0;
+    const totalData = w.total_data != null ? Number(w.total_data) : 0;
+    const daCount = w.da_count != null ? Number(w.da_count) : 0;
+    
+    // Use full name for better clarity, trim whitespace
+    const woredaName = (w.woreda || 'Unknown').trim();
     
     return {
-      name: (z.zone || 'Unknown').substring(0, 25),
-      fullName: z.zone || 'Unknown',
+      name: woredaName.length > 40 ? woredaName.substring(0, 40) + '...' : woredaName,
+      fullName: woredaName,
       data: isNaN(totalData) ? 0 : totalData,
       das: isNaN(daCount) ? 0 : daCount,
     };
-  }).sort((a, b) => b.data - a.data).slice(0, 10); // Sort and show top 10
+  }).sort((a, b) => b.data - a.data); // Sort by data descending
+
+  // Paginate woreda data
+  const woredaTotalPages = Math.ceil(allWoredaChartData.length / itemsPerPage);
+  const woredaStartIndex = (woredaPage - 1) * itemsPerPage;
+  const woredaEndIndex = woredaStartIndex + itemsPerPage;
+  const woredaChartData = allWoredaChartData.slice(woredaStartIndex, woredaEndIndex);
 
   const activeRate = stats.stats.totalDAs > 0 
     ? ((stats.stats.activeDAs / stats.stats.totalDAs) * 100).toFixed(1)
@@ -244,19 +249,12 @@ export default function PublicDashboard() {
     console.log('First region data:', JSON.stringify(regionChartData[0], null, 2));
     console.log('All region data values:', regionChartData.map(r => ({ name: r.name, data: r.data, das: r.das })));
   }
-  console.log('Zone chart data:', zoneChartData);
-  console.log('Zone chart data length:', zoneChartData.length);
-  if (zoneChartData.length > 0) {
-    console.log('First zone data:', JSON.stringify(zoneChartData[0], null, 2));
-    console.log('All zone data values:', zoneChartData.map(z => ({ name: z.name, data: z.data, das: z.das })));
-  }
   console.log('Pie chart data:', pieData);
   console.log('Pie chart data length:', pieData.length);
   console.log('Raw stats.statusTrend:', JSON.stringify(stats.statusTrend, null, 2));
   console.log('Raw stats.stats:', {
     activeDAs: stats.stats.activeDAs,
     inactiveDAs: stats.stats.inactiveDAs,
-    pendingDAs: stats.stats.pendingDAs,
   });
 
   return (
@@ -285,22 +283,6 @@ export default function PublicDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
-              <button
-                onClick={fetchStats}
-                className="flex items-center space-x-2 px-2 sm:px-3 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300 text-xs sm:text-sm"
-                title="Refresh Data"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-              <div className="text-right hidden lg:block">
-                <p className="text-xs text-gray-500">Last Updated</p>
-                <p className="text-sm font-semibold text-gray-700">
-                  {lastUpdated.toLocaleTimeString()}
-                </p>
-              </div>
               <a
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
@@ -338,10 +320,10 @@ export default function PublicDashboard() {
           </p>
         </div>
 
-        {/* KPI Cards - Professional Design */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
+        {/* KPI Cards - Professional Design with Proportional Sizing */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
                 <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalDAs.toLocaleString()}</p>
@@ -353,8 +335,8 @@ export default function PublicDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
                 <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalData.toLocaleString()}</p>
@@ -366,8 +348,8 @@ export default function PublicDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Woreda Representatives</p>
                 <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalReps.toLocaleString()}</p>
@@ -379,24 +361,21 @@ export default function PublicDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-amber-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-amber-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
                 <p className="text-4xl font-bold text-gray-900 mb-1">{Math.round(stats.stats.avgDataPerDA).toLocaleString()}</p>
                 <p className="text-xs text-gray-600">Average Collection Rate</p>
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <p className="text-xs text-gray-500">Performance Metric</p>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Status Cards - Professional */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-center justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Active DAs</p>
                 <p className="text-4xl font-bold text-gray-900 mb-2">{stats.stats.activeDAs.toLocaleString()}</p>
@@ -415,8 +394,8 @@ export default function PublicDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600 hover:shadow-lg transition">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-center justify-between flex-1">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Inactive DAs</p>
                 <p className="text-4xl font-bold text-gray-900 mb-2">{stats.stats.inactiveDAs.toLocaleString()}</p>
@@ -429,26 +408,6 @@ export default function PublicDashboard() {
                   <div 
                     className="bg-red-600 h-2 rounded-full transition-all duration-500" 
                     style={{ width: `${stats.stats.totalDAs > 0 ? (stats.stats.inactiveDAs / stats.stats.totalDAs) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-600 hover:shadow-lg transition">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pending DAs</p>
-                <p className="text-4xl font-bold text-gray-900 mb-2">{stats.stats.pendingDAs.toLocaleString()}</p>
-                <p className="text-xs text-gray-600 mb-3">
-                  {stats.stats.totalDAs > 0 
-                    ? `${((stats.stats.pendingDAs / stats.stats.totalDAs) * 100).toFixed(1)}% of total DAs`
-                    : '0% of total'}
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-yellow-600 h-2 rounded-full transition-all duration-500" 
-                    style={{ width: `${stats.stats.totalDAs > 0 ? (stats.stats.pendingDAs / stats.stats.totalDAs) * 100 : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -553,61 +512,121 @@ export default function PublicDashboard() {
               <>
                 <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px]">
                   <PieChart>
+                    <defs>
+                      <linearGradient id="activeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22543d" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#1a3d2e" stopOpacity={0.95} />
+                      </linearGradient>
+                      <linearGradient id="inactiveGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6b7280" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#4b5563" stopOpacity={0.95} />
+                      </linearGradient>
+                    </defs>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius="70%"
-                      innerRadius="30%"
+                      label={false}
+                      outerRadius="75%"
+                      innerRadius="40%"
                       fill="#8884d8"
                       dataKey="value"
-                      paddingAngle={2}
+                      paddingAngle={3}
+                      animationDuration={1000}
                     >
-                      {pieData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.color}
-                          stroke="#ffffff"
-                          strokeWidth={2}
-                        />
-                      ))}
+                      {pieData.map((entry, index) => {
+                        // Use gradient for Active/Inactive
+                        let fillColor = entry.color;
+                        if (entry.name === 'Active') {
+                          fillColor = 'url(#activeGradient)';
+                        } else if (entry.name === 'Inactive') {
+                          fillColor = 'url(#inactiveGradient)';
+                        }
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={fillColor}
+                            stroke="#ffffff"
+                            strokeWidth={3}
+                          />
+                        );
+                      })}
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: '#ffffff', 
                         border: '1px solid #d1d5db', 
-                        borderRadius: '8px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        padding: '12px',
-                        fontSize: '13px'
+                        borderRadius: '6px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        padding: '12px 16px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        fontFamily: 'system-ui, -apple-system, sans-serif'
                       }}
-                      formatter={(value: any) => [value.toLocaleString(), 'Count']}
+                      formatter={(value: any, name: string, props: any) => {
+                        const total = pieData.reduce((sum, item) => sum + item.value, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                        return [`${value.toLocaleString()} (${percentage}%)`, 'Count'];
+                      }}
+                      labelStyle={{ 
+                        color: '#111827', 
+                        fontWeight: 600, 
+                        fontSize: '13px', 
+                        marginBottom: '6px',
+                        fontFamily: 'system-ui, -apple-system, sans-serif'
+                      }}
                     />
                     <Legend 
                       verticalAlign="bottom" 
-                      height={36}
+                      height={50}
                       wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
                       iconType="circle"
+                      formatter={(value: string) => {
+                        const entry = pieData.find(d => d.name === value);
+                        const total = pieData.reduce((sum, item) => sum + item.value, 0);
+                        const percentage = entry && total > 0 ? ((entry.value / total) * 100).toFixed(1) : '0';
+                        return `${value}: ${percentage}%`;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="mt-6 space-y-2">
-                  {pieData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="font-semibold text-gray-700">{item.name}</span>
+                <div className="mt-6 space-y-3">
+                  {pieData.map((item, index) => {
+                    const total = pieData.reduce((sum, i) => sum + i.value, 0);
+                    const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
+                    const isActive = item.name === 'Active';
+                    return (
+                      <div 
+                        key={index} 
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                          isActive 
+                            ? 'bg-gray-50 border-gray-300 hover:bg-gray-100' 
+                            : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div 
+                            className="w-4 h-4 rounded-full"
+                            style={{ 
+                              backgroundColor: item.color
+                            }}
+                          ></div>
+                          <span className="font-semibold text-gray-800 text-sm">
+                            {item.name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-gray-900 text-base">
+                            {item.value.toLocaleString()}
+                          </span>
+                          <span className="text-sm text-gray-600 ml-2 font-medium">
+                            ({percentage}%)
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-gray-900">{item.value.toLocaleString()}</span>
-                        <span className="text-xs text-gray-500 ml-2">
-                          ({((item.value / stats.stats.totalDAs) * 100).toFixed(1)}%)
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             ) : (
@@ -679,7 +698,7 @@ export default function PublicDashboard() {
                         <div className="text-sm text-gray-700">{da.reporting_manager_name || 'N/A'}</div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-base font-bold text-gray-900">{da.total_collected_data.toLocaleString()}</div>
+                        <div className="text-base font-bold text-gray-900">{da.total_data_collected.toLocaleString()}</div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-lg ${
@@ -705,62 +724,121 @@ export default function PublicDashboard() {
           </div>
         </div>
 
-        {/* Zone Data Chart - Full Width */}
-        <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
+        {/* Woreda Data Chart - Full Width */}
+        <div className="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200 mt-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200 gap-3">
             <div>
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data Collection by Zone</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Top 10 Zones Performance Analysis</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data Collection by Woreda</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Showing {woredaStartIndex + 1}-{Math.min(woredaEndIndex, allWoredaChartData.length)} of {allWoredaChartData.length} woredas</p>
             </div>
+            {allWoredaChartData.length > itemsPerPage && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setWoredaPage(prev => Math.max(1, prev - 1))}
+                  disabled={woredaPage === 1}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2 text-sm font-semibold text-gray-700">
+                  Page {woredaPage} of {woredaTotalPages}
+                </span>
+                <button
+                  onClick={() => setWoredaPage(prev => Math.min(woredaTotalPages, prev + 1))}
+                  disabled={woredaPage === woredaTotalPages}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
-          {zoneChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={450} className="sm:h-[500px] md:h-[550px]">
-              <ComposedChart data={zoneChartData} margin={{ top: 20, right: 30, left: 10, bottom: 100 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+          {woredaChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={600} className="sm:h-[650px] md:h-[700px]">
+              <ComposedChart data={woredaChartData} margin={{ top: 20, right: 30, left: 20, bottom: 140 }}>
+                <defs>
+                  <linearGradient id="woredaBarGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#1e40af" stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.4} />
                 <XAxis 
                   dataKey="name" 
                   angle={-45} 
                   textAnchor="end" 
-                  height={120}
-                  tick={{ fontSize: 10, fill: '#4b5563', fontWeight: 500 }}
+                  height={160}
+                  tick={{ fontSize: 13, fill: '#1f2937', fontWeight: 600, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   interval={0}
-                  stroke="#9ca3af"
+                  stroke="#6b7280"
+                  tickLine={{ stroke: '#9ca3af' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 11, fill: '#4b5563', fontWeight: 500 }}
+                  tick={{ fontSize: 13, fill: '#1f2937', fontWeight: 600, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   tickFormatter={(value) => value.toLocaleString()}
-                  stroke="#9ca3af"
-                  label={{ value: 'Data Collected', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '12px', fontWeight: 600 } }}
+                  stroke="#6b7280"
+                  tickLine={{ stroke: '#9ca3af' }}
+                  label={{ 
+                    value: 'Data Collected', 
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    style: { 
+                      textAnchor: 'middle', 
+                      fill: '#374151', 
+                      fontSize: '14px', 
+                      fontWeight: 600,
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    } 
+                  }}
                 />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#ffffff', 
-                    border: '1px solid #d1d5db', 
+                    border: '1px solid #2563eb', 
                     borderRadius: '8px',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    padding: '12px',
-                    fontSize: '13px'
+                    padding: '14px 16px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
                   }}
-                  cursor={{ fill: 'rgba(30, 58, 95, 0.1)' }}
-                  formatter={(value: any) => [value.toLocaleString(), 'Total Data']}
+                  cursor={{ fill: 'rgba(37, 99, 235, 0.15)', stroke: '#2563eb', strokeWidth: 1 }}
+                  formatter={(value: any, name: string, props: any) => {
+                    const fullName = props.payload?.fullName || props.payload?.name || '';
+                    return [`${fullName}: ${value.toLocaleString()}`, 'Total Data Collected'];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      return payload[0].payload?.fullName || label;
+                    }
+                    return label;
+                  }}
+                  labelStyle={{ 
+                    color: '#111827', 
+                    fontWeight: 700, 
+                    fontSize: '14px', 
+                    marginBottom: '8px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}
                 />
                 <Legend 
-                  wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 500 }}
+                  wrapperStyle={{ paddingTop: '20px', fontSize: '14px', fontWeight: 600, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   iconType="rect"
                 />
                 <Bar 
                   dataKey="data" 
                   name="Total Data Collected" 
-                  fill="#1e3a5f" 
+                  fill="url(#woredaBarGradient)" 
                   radius={[6, 6, 0, 0]}
-                  stroke="#0f1f3a"
-                  strokeWidth={1}
+                  stroke="#1e40af"
+                  strokeWidth={2}
+                  animationDuration={800}
                 />
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[400px] flex flex-col items-center justify-center text-gray-400">
-              <p className="text-lg font-semibold mb-2">No zone data available</p>
+              <p className="text-lg font-semibold mb-2">No woreda data available</p>
               <p className="text-sm">Check database connection and data</p>
               <button 
                 onClick={fetchStats}

@@ -1,22 +1,25 @@
 import { Pool } from 'pg';
 
 // Database connection string
-// Note: The connection string contains URL-encoded characters
+// Uses DATABASE_URL environment variable for local PostgreSQL
+// Format: postgresql://username:password@localhost:5432/database_name
 const getConnectionString = () => {
-  if (process.env.DATABASE_URL) {
-    // If DATABASE_URL is set, use it (it may already be decoded)
-    return process.env.DATABASE_URL;
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required. Please set it in .env.local file.');
   }
-  // Fallback to the provided connection string
-  return 'postgresql://Ethiopian%20Map%20System_owner:npg_wLSNX7Qg6hDi@ep-autumn-frost-a8zg2v20-pooler.eastus2.azure.neon.tech/cropin?sslmode=require&channel_binding=require';
+  return process.env.DATABASE_URL;
 };
 
 const connectionString = getConnectionString();
 
+// Check if connection string indicates local database (no SSL needed)
+const isLocalDatabase = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
 // Optimized connection pool for faster queries
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: {
+  // SSL only needed for remote databases, not local PostgreSQL
+  ssl: isLocalDatabase ? false : {
     rejectUnauthorized: false
   },
   // Connection pool optimizations for faster queries

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     const global = searchParams.get('global') === 'true';
 
     // Optimized query - only select needed columns
-    let query = 'SELECT name, region, zone, woreda, kebele, contactnumber, reporting_manager_name, reporting_manager_mobile, language, total_collected_data, status FROM da_users WHERE 1=1';
+    let query = 'SELECT name, region, zone, woreda, kebele, contact_number, reporting_manager_name, reporting_manager_mobile, language, total_data_collected, status FROM da_users WHERE 1=1';
     const params: any[] = [];
     let paramCount = 0;
 
@@ -122,7 +122,12 @@ export async function GET(request: NextRequest) {
       params.push(woreda);
     }
 
-    query += ' ORDER BY name';
+    // Order by: Active users first, then by total_data_collected DESC, then alphabetically by name
+    // Clean/trim names and handle Amharic characters (they come after Z in Unicode)
+    query += ` ORDER BY 
+      CASE WHEN status = 'Active' THEN 0 ELSE 1 END,
+      CASE WHEN status = 'Active' THEN total_data_collected ELSE 0 END DESC,
+      TRIM(COALESCE(name, ''))`;
 
     console.log('Regional Manager - Final query:', query);
     console.log('Regional Manager - Query params:', params);
@@ -166,11 +171,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { contactnumber, total_collected_data, status } = await request.json();
+    const { contact_number, total_data_collected, status } = await request.json();
 
-    if (!contactnumber) {
+    if (!contact_number) {
       return NextResponse.json(
         { error: 'Contact number is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate status - only allow 'Active' or 'Inactive'
+    if (status !== undefined && status !== 'Active' && status !== 'Inactive') {
+      return NextResponse.json(
+        { error: 'Status must be either Active or Inactive' },
         { status: 400 }
       );
     }
@@ -178,8 +191,8 @@ export async function PATCH(request: NextRequest) {
     // Admin can edit any DA, Woreda Reps can only edit their own
     if (!admin && woredaRepPhone !== 'Admin@123') {
       const daCheck = await pool.query(
-        'SELECT contactnumber FROM da_users WHERE contactnumber = $1 AND reporting_manager_mobile = $2',
-        [contactnumber, woredaRepPhone]
+        'SELECT contact_number FROM da_users WHERE contact_number = $1 AND reporting_manager_mobile = $2',
+        [contact_number, woredaRepPhone]
       );
 
       if (daCheck.rows.length === 0) {
@@ -195,17 +208,22 @@ export async function PATCH(request: NextRequest) {
     const updateValues: any[] = [];
     let paramCount = 0;
 
-    if (total_collected_data !== undefined) {
+    if (total_data_collected !== undefined) {
       paramCount++;
-      updateFields.push(`total_collected_data = $${paramCount}`);
-      updateValues.push(total_collected_data);
+      updateFields.push(`total_data_collected = $${paramCount}::INTEGER`);
+      // Ensure it's a number, default to 0 if invalid
+      const dataValue = Number(total_data_collected);
+      updateValues.push(isNaN(dataValue) ? 0 : dataValue);
     }
 
     if (status !== undefined) {
       paramCount++;
-      updateFields.push(`status = $${paramCount}`);
+      updateFields.push(`status = $${paramCount}::VARCHAR`);
       updateValues.push(status);
     }
+
+    // Always update last_updated timestamp (no parameter needed)
+    updateFields.push(`last_updated = CURRENT_TIMESTAMP`);
 
     if (updateFields.length === 0) {
       return NextResponse.json(
@@ -214,13 +232,14 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Add contact_number for WHERE clause
     paramCount++;
-    updateValues.push(contactnumber);
+    updateValues.push(contact_number);
 
     const updateQuery = `
       UPDATE da_users 
       SET ${updateFields.join(', ')} 
-      WHERE contactnumber = $${paramCount}
+      WHERE contact_number = $${paramCount}
       RETURNING *
     `;
 

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     if (admin) {
       // Admin sees all data
       const globalResult = await pool.query(
-        `SELECT COUNT(*) as count, COALESCE(SUM(total_collected_data), 0) as total 
+        `SELECT COUNT(*) as count, COALESCE(SUM(total_data_collected), 0) as total 
          FROM da_users`
       );
 
@@ -61,13 +61,13 @@ export async function GET(request: NextRequest) {
       // Woreda Rep - optimized query with index
       const [repResult, globalResult] = await Promise.all([
         pool.query(
-          `SELECT COUNT(*) as count, COALESCE(SUM(total_collected_data), 0) as total 
+          `SELECT COUNT(*) as count, COALESCE(SUM(total_data_collected), 0) as total 
            FROM da_users 
            WHERE reporting_manager_mobile = $1`,
           [phoneNumber]
         ),
         pool.query(
-          `SELECT COUNT(*) as count, COALESCE(SUM(total_collected_data), 0) as total 
+          `SELECT COUNT(*) as count, COALESCE(SUM(total_data_collected), 0) as total 
            FROM da_users`
         )
       ]);
