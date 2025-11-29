@@ -807,7 +807,7 @@ export default function PublicDashboard() {
                     const fullName = props.payload?.fullName || props.payload?.name || '';
                     return [`${fullName}: ${value.toLocaleString()}`, 'Total Data Collected'];
                   }}
-                  labelFormatter={(label, payload) => {
+                  labelFormatter={(label: any, payload: any) => {
                     if (payload && payload[0]) {
                       return payload[0].payload?.fullName || label;
                     }
