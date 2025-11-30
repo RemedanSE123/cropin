@@ -151,14 +151,17 @@ export default function DashboardContent() {
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
           <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-              <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
+              <div className="relative flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
                   width={56}
                   height={56}
-                  className="object-contain rounded-lg"
-                  priority
+                  className="h-8 sm:h-10 w-auto object-contain rounded-lg"
+                  unoptimized
+                  onError={(e) => {
+                    console.error('Failed to load MOA logo:', e);
+                  }}
                 />
               </div>
               <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
