@@ -188,7 +188,7 @@ export default function RegionalManagerDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
-              <div className="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg border border-blue-300 font-semibold text-xs sm:text-sm">
+              <div className="hidden sm:block px-3 py-2 bg-blue-100 text-blue-800 rounded-lg border border-blue-300 font-semibold text-xs sm:text-sm">
                 Read-Only Access
               </div>
               <a

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
+// Force dynamic rendering - disable static generation and caching
+export const dynamic = 'force-dynamic';
+
 // Public API endpoint for dashboard stats (no authentication required)
 export async function GET() {
   try {
@@ -170,19 +173,36 @@ export async function GET() {
 
     console.log('Formatted stats:', JSON.stringify(formattedStats, null, 2));
 
-    return NextResponse.json({
-      stats: formattedStats,
-      regionData: formattedRegionData, // All regions, not just top 5
-      zoneData: formattedZoneData, // All zones
-      woredaData: formattedWoredaData, // All woredas
-      statusTrend: trendResult.rows,
-      topDAs: topDAsResult.rows,
-    });
+    // Return response with cache control headers to prevent caching
+    return NextResponse.json(
+      {
+        stats: formattedStats,
+        regionData: formattedRegionData, // All regions, not just top 5
+        zoneData: formattedZoneData, // All zones
+        woredaData: formattedWoredaData, // All woredas
+        statusTrend: trendResult.rows,
+        topDAs: topDAsResult.rows,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error fetching public stats:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      }
     );
   }
 }
