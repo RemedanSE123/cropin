@@ -162,19 +162,19 @@ export default function RegionalManagerDashboard() {
       {/* Top Navigation Bar */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
-                  width={56} 
+                  width={56}
                   height={56}
                   className="object-contain rounded-lg"
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
                 <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
@@ -184,7 +184,7 @@ export default function RegionalManagerDashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
               <div className="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg border border-blue-300 font-semibold text-xs sm:text-sm">
                 Read-Only Access
               </div>
@@ -225,68 +225,56 @@ export default function RegionalManagerDashboard() {
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Total DAs</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+        {/* KPI Cards - Matching Dashboard Style */}
+        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
+              <div className="flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DAs</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{totalDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Development Agents</p>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{totalDAs.toLocaleString()}</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Total Data</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
+              <div className="flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{totalData.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Data Points Collected</p>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{totalData.toLocaleString()}</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-emerald-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Active DAs</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-emerald-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
+              <div className="flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active DAs</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{activeDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">{totalDAs > 0 ? Math.round((activeDAs / totalDAs) * 100) : 0}% of total</p>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{activeDAs.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">{totalDAs > 0 ? Math.round((activeDAs / totalDAs) * 100) : 0}%</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Inactive DAs</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-red-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
+              <div className="flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Inactive DAs</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{inactiveDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">{totalDAs > 0 ? Math.round((inactiveDAs / totalDAs) * 100) : 0}% of total</p>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{inactiveDAs.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">{totalDAs > 0 ? Math.round((inactiveDAs / totalDAs) * 100) : 0}%</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600">Avg Data/DA</h3>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-600 hover:shadow-lg transition h-full flex flex-col">
+            <div className="flex items-start justify-between flex-1">
+              <div className="flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{avgDataPerDA.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Average Collection Rate</p>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{avgDataPerDA.toLocaleString()}</p>
           </div>
         </div>
 
@@ -307,7 +295,7 @@ export default function RegionalManagerDashboard() {
                 </div>
               </div>
               <div className="bg-white/80 rounded-xl p-4 border border-blue-100 shadow-inner">
-                <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px] lg:h-[550px]">
+                <ResponsiveContainer width="100%" height={450} className="sm:h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
                   <BarChart data={allWoredaStats} margin={{ top: 25, right: 30, left: 20, bottom: 90 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.4} vertical={false} />
                     <XAxis 
@@ -395,8 +383,8 @@ export default function RegionalManagerDashboard() {
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 font-medium">Highest performing Development Agents</p>
               </div>
-              <ResponsiveContainer width="100%" height={300} className="sm:h-[350px] md:h-[400px]">
-                <BarChart data={daStats.top5.map(da => ({ name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name, total: da.total }))} margin={{ top: 15, right: 20, left: 10, bottom: 60 }}>
+              <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px] lg:h-[550px]">
+                <BarChart data={daStats.top5.map(da => ({ name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name, total: da.total }))} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" opacity={0.5} />
                   <XAxis 
                     dataKey="name" 
@@ -443,8 +431,8 @@ export default function RegionalManagerDashboard() {
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 font-medium">Lowest performing Development Agents</p>
               </div>
-              <ResponsiveContainer width="100%" height={300} className="sm:h-[350px] md:h-[400px]">
-                <BarChart data={daStats.least5.map(da => ({ name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name, total: da.total }))} margin={{ top: 15, right: 20, left: 10, bottom: 60 }}>
+              <ResponsiveContainer width="100%" height={400} className="sm:h-[450px] md:h-[500px] lg:h-[550px]">
+                <BarChart data={daStats.least5.map(da => ({ name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name, total: da.total }))} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" opacity={0.5} />
                   <XAxis 
                     dataKey="name" 
@@ -529,7 +517,7 @@ export default function RegionalManagerDashboard() {
               </div>
             </div>
             <div className="bg-white/80 rounded-xl p-4 border border-emerald-100 shadow-inner">
-              <ResponsiveContainer width="100%" height={350} className="sm:h-[400px] md:h-[450px]">
+              <ResponsiveContainer width="100%" height={450} className="sm:h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
                 <BarChart data={chartData} margin={{ top: 25, right: 30, left: 20, bottom: 90 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.4} vertical={false} />
                   <XAxis 

@@ -27,14 +27,17 @@ interface DATableProps {
 export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps) {
   // Check if user is admin (Admin@123 only, not phone number)
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isRegionalManager, setIsRegionalManager] = useState(false);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
     const woredaRepPhone = localStorage.getItem('woredaRepPhone');
     const isAdminFlag = localStorage.getItem('isAdmin') === 'true';
+    const isRegionalManagerFlag = localStorage.getItem('isRegionalManager') === 'true';
     
     // Only Admin@123 is considered admin, not phone numbers
     setIsAdmin(woredaRepPhone === 'Admin@123' && isAdminFlag === true);
+    setIsRegionalManager(isRegionalManagerFlag === true);
   }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'total_data_collected' | 'status' | null>(null);
@@ -258,11 +261,12 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     return filtered;
   }, [localUserData, selectedRegion, selectedZone, selectedWoreda, selectedKebele, searchTerm, advancedSearch, sortField, sortDirection]);
 
-  // Pagination
+  // Pagination - For admins and regional managers, woreda reps see all DAs
+  const showPagination = isAdmin || isRegionalManager;
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const startIndex = showPagination ? (currentPage - 1) * itemsPerPage : 0;
+  const endIndex = showPagination ? startIndex + itemsPerPage : filteredUsers.length;
+  const paginatedUsers = showPagination ? filteredUsers.slice(startIndex, endIndex) : filteredUsers;
 
   // Reset to page 1 when filters change
   const handleFilterChange = () => {
@@ -643,7 +647,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                   <tr key={user.contact_number} className="hover:bg-slate-50 transition-colors duration-150 border-b border-gray-100">
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white text-center">
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded bg-slate-100 text-slate-700 text-xs font-medium">
-                        {startIndex + index + 1}
+                        {showPagination ? startIndex + index + 1 : index + 1}
                       </span>
                     </td>
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white">
@@ -840,28 +844,39 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
       <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t-2 border-gray-200 bg-gray-50 rounded-b-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <p className="text-xs sm:text-sm font-semibold text-gray-600">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} DA users
-            {filteredUsers.length !== localUserData.length && <span className="hidden sm:inline"> (filtered from {localUserData.length} total)</span>}
+            {showPagination ? (
+              <>
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} DA users
+                {filteredUsers.length !== localUserData.length && <span className="hidden sm:inline"> (filtered from {localUserData.length} total)</span>}
+              </>
+            ) : (
+              <>
+                Showing all {filteredUsers.length} Development Agent{filteredUsers.length !== 1 ? 's' : ''}
+                {filteredUsers.length !== localUserData.length && <span className="hidden sm:inline"> (filtered from {localUserData.length} total)</span>}
+              </>
+            )}
           </p>
-          <div className="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-end">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-            >
-              Previous
-            </button>
-            <span className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-            >
-              Next
-            </button>
-          </div>
+          {showPagination && (
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-end">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                Previous
+              </button>
+              <span className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

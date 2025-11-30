@@ -83,8 +83,8 @@ export default function LoginPage() {
       {/* Top Navigation Bar - Matching Dashboard */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
@@ -95,7 +95,7 @@ export default function LoginPage() {
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
                 <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
@@ -103,7 +103,18 @@ export default function LoginPage() {
                 <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">Cropin Grow System - Login</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
+              <a
+                href="https://forms.gle/YRGNNjeVnGJyUuZdA"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-2 sm:px-4 py-2 text-gray-700 hover:text-gray-900 transition rounded-lg hover:bg-gray-100 font-medium border border-gray-300 text-xs sm:text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span className="hidden sm:inline">Support</span>
+              </a>
               <button
                 onClick={handleBackToDashboard}
                 className="flex items-center space-x-2 px-3 sm:px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold text-sm sm:text-base"
@@ -120,21 +131,21 @@ export default function LoginPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12 py-6 sm:py-12">
-        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-12">
+        <div className="flex items-center justify-center min-h-[calc(100vh-180px)] sm:min-h-[calc(100vh-200px)]">
           <div className="w-full max-w-md">
             {/* Login Card */}
-            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 md:p-8 border-2 border-gray-200">
+            <div className="bg-white rounded-xl shadow-xl p-5 sm:p-6 md:p-8 border-2 border-gray-200">
               {/* Header */}
-              <div className="text-center mb-6 sm:mb-8">
+              <div className="text-center mb-5 sm:mb-8">
                 <div className="flex justify-center mb-3 sm:mb-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-800 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-2">
                   Sign In
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600">
@@ -143,14 +154,14 @@ export default function LoginPage() {
               </div>
 
               {/* Form */}
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
                 {error && (
-                  <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  <div className="bg-red-50 border-2 border-red-200 text-red-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm">
                     <div className="flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-semibold">{error}</span>
+                      <span className="font-semibold text-xs sm:text-sm">{error}</span>
                     </div>
                   </div>
                 )}
@@ -163,10 +174,12 @@ export default function LoginPage() {
                     <input
                       id="phoneNumber"
                       name="phoneNumber"
-                      type="tel"
+                      type="text"
+                      inputMode="text"
+                      autoComplete="username"
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition text-gray-900 placeholder-gray-400"
-                      placeholder="Phone Number or Admin@123"
+                      className="w-full px-4 py-3.5 sm:py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition text-gray-900 placeholder-gray-400"
+                      placeholder="Phone Number 9********"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                     />
@@ -180,8 +193,9 @@ export default function LoginPage() {
                       id="password"
                       name="password"
                       type="password"
+                      autoComplete="current-password"
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-3.5 sm:py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition text-gray-900 placeholder-gray-400"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -193,7 +207,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                    className="w-full flex justify-center items-center py-3.5 sm:py-3 px-4 border border-transparent text-base font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 active:scale-[0.98]"
                   >
                     {loading ? (
                       <>
@@ -201,7 +215,7 @@ export default function LoginPage() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 8 2.69 8 6v2H4z"></path>
                         </svg>
-                        Signing in...
+                        <span>Signing in...</span>
                       </>
                     ) : (
                       <>
@@ -216,7 +230,7 @@ export default function LoginPage() {
               </form>
 
               {/* Footer Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-gray-200">
                 <p className="text-xs text-center text-gray-500">
                   Ministry of Agriculture - Federal Democratic Republic of Ethiopia
                 </p>

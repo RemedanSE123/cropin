@@ -10,13 +10,13 @@ interface KPIs {
 export default function KPICards({ kpis }: { kpis: KPIs }) {
   const cards = [
     {
-      title: 'My DA Users',
+      title: 'TOTAL DA ',
       value: kpis.repTotalDAs,
       color: 'bg-blue-500',
       icon: '👥',
     },
     {
-      title: 'My Total Data Collected',
+      title: 'Total Collected Data',
       value: kpis.repTotalData.toLocaleString(),
       color: 'bg-green-500',
       icon: '📊',

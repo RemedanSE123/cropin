@@ -37,6 +37,8 @@ export default function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [woredaRepName, setWoredaRepName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [chartPage, setChartPage] = useState(1);
+  const chartItemsPerPage = 10;
 
   useEffect(() => {
     const name = localStorage.getItem('woredaRepName');
@@ -123,11 +125,16 @@ export default function DashboardContent() {
     }
   };
 
-  // Prepare chart data
-  const chartData = daUsers.map(da => ({
+  // Prepare chart data with pagination
+  const allChartData = daUsers.map(da => ({
     name: da.name.length > 15 ? da.name.substring(0, 15) + '...' : da.name,
     'Data Collected': da.total_data_collected || 0,
   }));
+
+  const chartTotalPages = Math.ceil(allChartData.length / chartItemsPerPage);
+  const chartStartIndex = (chartPage - 1) * chartItemsPerPage;
+  const chartEndIndex = chartStartIndex + chartItemsPerPage;
+  const chartData = allChartData.slice(chartStartIndex, chartEndIndex);
 
   if (loading) {
     return (
@@ -142,19 +149,19 @@ export default function DashboardContent() {
       {/* Top Navigation Bar - Matching Home Page */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
-                  width={56} 
+                  width={56}
                   height={56}
                   className="object-contain rounded-lg"
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
                 <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
@@ -164,7 +171,7 @@ export default function DashboardContent() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
               <a
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
@@ -210,31 +217,98 @@ export default function DashboardContent() {
         )}
 
         {/* Chart */}
-        {chartData.length > 0 && (
-          <div className="mb-6 sm:mb-8 bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
-            <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">Data Collection Overview</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Performance by Development Agent</p>
+        {allChartData.length > 0 && (
+          <div className="mb-6 sm:mb-8 bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-gray-200 hover:shadow-xl transition-shadow">
+            <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b-2 border-gray-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Data Collection Overview</h2>
+                  <p className="text-sm sm:text-base text-gray-600 font-medium">Performance by Development Agent</p>
+                </div>
+                {chartTotalPages > 1 && (
+                  <div className="text-sm font-semibold text-gray-600">
+                    Showing {chartStartIndex + 1}-{Math.min(chartEndIndex, allChartData.length)} of {allChartData.length}
+                  </div>
+                )}
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px] md:h-[350px]">
-              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <ResponsiveContainer width="100%" height={450} className="sm:h-[500px] md:h-[550px] lg:h-[600px]">
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+                <defs>
+                  <linearGradient id="dataGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2d5016" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#1e3a0f" stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
                   angle={-45} 
                   textAnchor="end" 
-                  height={100}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  height={120}
+                  tick={{ fontSize: 12, fill: '#4b5563', fontWeight: 500 }}
+                  stroke="#9ca3af"
                 />
                 <YAxis 
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  tick={{ fontSize: 13, fill: '#4b5563', fontWeight: 500 }}
                   tickFormatter={(value) => value.toLocaleString()}
+                  stroke="#9ca3af"
+                  label={{ value: 'Data Collected', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '14px', fontWeight: 600 } }}
                 />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Data Collected" fill="#2d5016" radius={[4, 4, 0, 0]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#ffffff', 
+                    border: '2px solid #2d5016', 
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    padding: '12px',
+                    fontSize: '14px',
+                    fontWeight: 500
+                  }}
+                  formatter={(value: any) => [value.toLocaleString(), 'Data Collected']}
+                  cursor={{ fill: 'rgba(45, 80, 22, 0.1)' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px', fontSize: '14px', fontWeight: 600 }}
+                  iconType="rect"
+                />
+                <Bar 
+                  dataKey="Data Collected" 
+                  fill="url(#dataGradient)" 
+                  radius={[8, 8, 0, 0]} 
+                  stroke="#1e3a0f"
+                  strokeWidth={2}
+                  animationDuration={1000}
+                />
               </BarChart>
             </ResponsiveContainer>
+            {chartTotalPages > 1 && (
+              <div className="mt-4 pt-4 border-t-2 border-gray-200 flex items-center justify-between">
+                <button
+                  onClick={() => setChartPage(prev => Math.max(1, prev - 1))}
+                  disabled={chartPage === 1}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Previous</span>
+                </button>
+                <span className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg">
+                  Page {chartPage} of {chartTotalPages}
+                </span>
+                <button
+                  onClick={() => setChartPage(prev => Math.min(chartTotalPages, prev + 1))}
+                  disabled={chartPage === chartTotalPages}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                >
+                  <span>Next</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

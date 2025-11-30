@@ -6,7 +6,7 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 
 - **Login System**: 
   - Admin login: `Admin@123` / `Admin@123`
-  - Regional Manager login: `tigray@123`, `south@123`, `sidama@123`, `ce@123`, `amhara@123`, `oromiya@123` (password: `123`)
+  - Regional Manager login: `tigray@123`, `south@123`, `sidama@123`, `ce@123`, `amhara@123`, `oromia@123` (password: `123`)
   - Woreda Manager login: Phone number from `reporting_manager_mobile` field (password: `123`)
 - **Dashboard Overview**: View all DA users connected to the logged-in manager
 - **Editable Fields**: Woreda Managers can edit only their DA users' total data collected and status (Active/Inactive only)

@@ -262,19 +262,19 @@ export default function PublicDashboard() {
       {/* Top Navigation Bar - Professional */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
-                  width={56} 
+                  width={56}
                   height={56}
                   className="object-contain rounded-lg"
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
                 <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
@@ -282,7 +282,7 @@ export default function PublicDashboard() {
                 <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">Cropin Grow System - Real-Time Monitoring Dashboard</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
               <a
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
@@ -296,7 +296,7 @@ export default function PublicDashboard() {
               </a>
               <button
                 onClick={handleLogin}
-                className="flex items-center space-x-2 px-3 sm:px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold text-xs sm:text-sm"
+                className="flex items-center space-x-2 px-3 sm:px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition shadow-md font-semibold text-sm sm:text-base"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -321,65 +321,65 @@ export default function PublicDashboard() {
         </div>
 
         {/* KPI Cards - Professional Design with Proportional Sizing */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-600 hover:shadow-lg transition h-full flex flex-col">
+        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
-                <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalDAs.toLocaleString()}</p>
-                <p className="text-xs text-gray-600">Active Development Agents</p>
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Active Rate: <span className="font-semibold text-gray-700">{activeRate}%</span></p>
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Active Development Agents</p>
+                <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500">Active Rate: <span className="font-semibold text-gray-700">{activeRate}%</span></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
-                <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalData.toLocaleString()}</p>
-                <p className="text-xs text-gray-600">Data Points Collected</p>
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Avg per DA: <span className="font-semibold text-gray-700">{Math.round(stats.stats.avgDataPerDA).toLocaleString()}</span></p>
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalData.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Data Points Collected</p>
+                <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500">Avg per DA: <span className="font-semibold text-gray-700">{Math.round(stats.stats.avgDataPerDA).toLocaleString()}</span></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600 hover:shadow-lg transition h-full flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Woreda Representatives</p>
-                <p className="text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalReps.toLocaleString()}</p>
-                <p className="text-xs text-gray-600">Active Field Managers</p>
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Avg DAs per Rep: <span className="font-semibold text-gray-700">{stats.stats.totalReps > 0 ? Math.round(stats.stats.totalDAs / stats.stats.totalReps) : 0}</span></p>
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Woreda Representatives</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{stats.stats.totalReps.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Active Field Managers</p>
+                <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500">Avg DAs per Rep: <span className="font-semibold text-gray-700">{stats.stats.totalReps > 0 ? Math.round(stats.stats.totalDAs / stats.stats.totalReps) : 0}</span></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-amber-600 hover:shadow-lg transition h-full flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-amber-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-start justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
-                <p className="text-4xl font-bold text-gray-900 mb-1">{Math.round(stats.stats.avgDataPerDA).toLocaleString()}</p>
-                <p className="text-xs text-gray-600">Average Collection Rate</p>
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Performance Metric</p>
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{Math.round(stats.stats.avgDataPerDA).toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600">Average Collection Rate</p>
+                <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500">Performance Metric</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-center justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Active DAs</p>
-                <p className="text-4xl font-bold text-gray-900 mb-2">{stats.stats.activeDAs.toLocaleString()}</p>
-                <p className="text-xs text-gray-600 mb-3">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Active DAs</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.stats.activeDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
                   {stats.stats.totalDAs > 0 
                     ? `${((stats.stats.activeDAs / stats.stats.totalDAs) * 100).toFixed(1)}% of total DAs`
                     : '0% of total'}
@@ -394,12 +394,12 @@ export default function PublicDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600 hover:shadow-lg transition h-full flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-red-600 hover:shadow-lg transition h-full flex flex-col">
             <div className="flex items-center justify-between flex-1">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Inactive DAs</p>
-                <p className="text-4xl font-bold text-gray-900 mb-2">{stats.stats.inactiveDAs.toLocaleString()}</p>
-                <p className="text-xs text-gray-600 mb-3">
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Inactive DAs</p>
+                <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.stats.inactiveDAs.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3">
                   {stats.stats.totalDAs > 0 
                     ? `${((stats.stats.inactiveDAs / stats.stats.totalDAs) * 100).toFixed(1)}% of total DAs`
                     : '0% of total'}

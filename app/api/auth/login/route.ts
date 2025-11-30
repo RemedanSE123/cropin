@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       'sidama@123': { region: 'Sidama', name: 'Sidama Regional Manager' },
       'ce@123': { region: 'Central Ethiopia', name: 'Central Ethiopia Regional Manager' },
       'amhara@123': { region: 'Amhara', name: 'Amhara Regional Manager' },
-      'oromiya@123': { region: 'Oromiya', name: 'Oromiya Regional Manager' },
+      'oromia@123': { region: 'Oromiya', name: 'Oromiya Regional Manager' },
     };
 
     if (phoneNumber in regionalManagerMap && password === '123') {

@@ -238,19 +238,19 @@ export default function AdminDashboard() {
       {/* Top Navigation Bar - Matching Dashboard Style */}
       <nav className="bg-white shadow-lg border-b-2 border-gray-300 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-0 sm:h-20 gap-3 sm:gap-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <div className="flex flex-row items-center py-3 sm:py-0 sm:h-20 gap-2 sm:gap-4 overflow-x-auto">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
               <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg p-1 shadow-md border border-gray-200">
                 <Image 
                   src="/moe.webp" 
                   alt="Ministry of Agriculture Logo" 
-                  width={56} 
+                  width={56}
                   height={56}
                   className="object-contain rounded-lg"
                   priority
                 />
               </div>
-              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-1 sm:flex-none">
+              <div className="border-l-2 border-gray-400 pl-2 sm:pl-4 flex-shrink-0">
                 <h1 className="text-sm sm:text-xl font-bold text-gray-800 leading-tight">
                   Ministry of Agriculture
                 </h1>
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto">
               <a
                 href="https://forms.gle/YRGNNjeVnGJyUuZdA"
                 target="_blank"
@@ -298,83 +298,79 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-600 hover:shadow-lg transition">
-              <div className="flex items-start justify-between">
+        {/* KPI Cards - 6 cards in 3,3 layout */}
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalDAs}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total DA Users</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalDAs}</p>
                 </div>
-                <div className="text-2xl sm:text-3xl opacity-20">👥</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">👥</div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalData.toLocaleString()}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Data Collected</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{displayKPIs.globalTotalData.toLocaleString()}</p>
                 </div>
-                <div className="text-2xl sm:text-3xl opacity-20">📊</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">📊</div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-600 hover:shadow-lg transition">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-purple-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Woreda Reps</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">{daUsers.length > 0 ? new Set(daUsers.map(d => d.reporting_manager_mobile)).size : 0}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Woreda Reps</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">{daUsers.length > 0 ? new Set(daUsers.map(d => d.reporting_manager_mobile)).size : 0}</p>
                 </div>
-                <div className="text-2xl sm:text-3xl opacity-20">🌍</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">🌍</div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-amber-600 hover:shadow-lg transition">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-amber-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Data per DA</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">
                     {calculatedKPIs.avgDataPerDA.toLocaleString()}
                   </p>
                 </div>
-                <div className="text-2xl sm:text-3xl opacity-20">📈</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">📈</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-emerald-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
+                <div className="flex-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active DAs</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">
+                    {daUsers.filter(u => (u.status === 'Active')).length}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
+                    {daUsers.length > 0 
+                      ? `${((daUsers.filter(u => (u.status === 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
+                      : '0% of total'}
+                  </p>
+                </div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">✅</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-red-600 hover:shadow-lg transition h-full flex flex-col">
+              <div className="flex items-start justify-between flex-1">
+                <div className="flex-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Inactive DAs</p>
+                  <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">
+                    {daUsers.filter(u => (u.status !== 'Active')).length}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
+                    {daUsers.length > 0 
+                      ? `${((daUsers.filter(u => (u.status !== 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
+                      : '0% of total'}
+                  </p>
+                </div>
+                <div className="text-xl sm:text-2xl lg:text-3xl opacity-20">❌</div>
               </div>
             </div>
           </div>
-
-        {/* Status KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active DAs</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                  {daUsers.filter(u => (u.status === 'Active')).length}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {daUsers.length > 0 
-                    ? `${((daUsers.filter(u => (u.status === 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
-                    : '0% of total'}
-                </p>
-              </div>
-              <div className="text-2xl sm:text-3xl opacity-20">✅</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-red-600 hover:shadow-lg transition">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Inactive DAs</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                  {daUsers.filter(u => (u.status !== 'Active')).length}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {daUsers.length > 0 
-                    ? `${((daUsers.filter(u => (u.status !== 'Active')).length / daUsers.length) * 100).toFixed(1)}% of total`
-                    : '0% of total'}
-                </p>
-              </div>
-              <div className="text-2xl sm:text-3xl opacity-20">❌</div>
-            </div>
-          </div>
-        </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
