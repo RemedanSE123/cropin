@@ -7,7 +7,7 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 - **Login System**: 
   - Admin login: `Admin@123` / `Admin@123`
   - Regional Manager login: `tigray@123`, `south@123`, `sidama@123`, `ce@123`, `amhara@123`, `oromia@123` (password: `123`)
-  - Woreda Manager login: Phone number from `reporting_manager_mobile` field (password: `123`)
+  - Woreda Manager login: Phone number from `reporting_manager_mobile` field / Unique 4-digit password (assigned per manager)
 - **Dashboard Overview**: View all DA users connected to the logged-in manager
 - **Editable Fields**: Woreda Managers can edit only their DA users' total data collected and status (Active/Inactive only)
 - **KPI Cards**: Display key performance indicators
@@ -34,6 +34,8 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
    - Create a PostgreSQL database (e.g., `cropin_grow`)
    - Run the SQL script in `database/schema.sql` to create the table and indexes
    - The script creates the `da_users` table with all required columns and indexes
+   - Run the migration script `database/migration_add_woreda_managers.sql` to create the `woreda_managers` table
+   - Run `node database/populate_woreda_manager_passwords.js` to generate unique 4-digit passwords for all woreda managers
 
 3. **Environment Variables**
    Create a `.env.local` file in the root directory:
@@ -44,7 +46,7 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
    Replace `username`, `password`, and `cropin_grow` with your actual PostgreSQL credentials and database name.
 
 4. **Database Schema**
-   The system uses a single table:
+   The system uses two main tables:
    
    - `da_users`: Contains Development Agent information
      - `id` (SERIAL PRIMARY KEY)
@@ -61,6 +63,14 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
      - `last_updated` (TIMESTAMP)
      - `status` (VARCHAR(10) DEFAULT 'inactive') - Only 'Active' or 'Inactive'
      - `created_at` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+   
+   - `woreda_managers`: Contains Woreda Manager credentials
+     - `id` (SERIAL PRIMARY KEY)
+     - `phone_number` (TEXT UNIQUE) - Phone number for login
+     - `password` (VARCHAR(4)) - Unique 4-digit password
+     - `manager_name` (TEXT)
+     - `created_at` (TIMESTAMP)
+     - `updated_at` (TIMESTAMP)
 
 4. **Run Development Server**
    ```bash
@@ -75,7 +85,7 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 1. **Login**: 
    - **Admin**: Use `Admin@123` / `Admin@123` for full access
    - **Regional Manager**: Use region username (e.g., `tigray@123`) / `123` for read-only regional access
-   - **Woreda Manager**: Use phone number from `reporting_manager_mobile` field / `123` for managing assigned DAs
+   - **Woreda Manager**: Use phone number from `reporting_manager_mobile` field / Unique 4-digit password (assigned individually)
 2. **Dashboard**: View your DA users, KPIs, and charts
 3. **Edit Data**: Click on "Total Data" or "Status" columns to edit (only for Woreda Managers, only when status is Active)
 4. **Status**: Only two statuses available - 'Active' and 'Inactive' (no Pending)
@@ -107,7 +117,9 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 │   ├── KPICards.tsx            # KPI cards component
 │   └── DATable.tsx             # DA users table component
 ├── database/
-│   └── schema.sql              # Database schema (run this in PostgreSQL)
+│   ├── schema.sql              # Database schema (run this in PostgreSQL)
+│   ├── migration_add_woreda_managers.sql  # Migration to add woreda_managers table
+│   └── populate_woreda_manager_passwords.js  # Script to generate unique passwords
 ├── lib/
 │   └── db.ts                   # Database connection (uses DATABASE_URL)
 └── package.json
@@ -118,14 +130,15 @@ A Next.js web application dashboard for managing Development Agents (DA) and Wor
 The system uses a single table `da_users`. See `database/schema.sql` for the complete schema.
 
 **Key Points:**
-- Woreda Managers log in using their phone number (stored in `reporting_manager_mobile`)
-- No separate `woreda_reps` table - manager info is in `da_users` table
+- Woreda Managers log in using their phone number (stored in `reporting_manager_mobile`) and unique 4-digit password
+- Woreda manager credentials are stored in the `woreda_managers` table
 - Status can only be 'Active' or 'Inactive' (default: 'inactive')
 - Column names: `contact_number` (not `contactnumber`), `total_data_collected` (not `total_collected_data`)
 
 ## Notes
 
-- The password is fixed as "123" for all users (as per requirements)
+- Each Woreda Manager has a unique 4-digit password assigned in the `woreda_managers` table
+- Passwords are generated automatically when running the populate script
 - Only Woreda Managers can edit their own DA users' data (filtered by `reporting_manager_mobile`)
 - Regional Managers have read-only access to all DAs in their region
 - Admin has full access to all DAs

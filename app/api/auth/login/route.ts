@@ -62,40 +62,54 @@ export async function POST(request: NextRequest) {
       }, { status: 200 });
     }
 
-    // Fixed password check for Woreda Reps - check before DB query
-    if (password !== '123') {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Check if phone number exists as reporting_manager_mobile in da_users table
-    // Get distinct manager info (in case same manager has multiple DAs)
-    const result = await pool.query(
-      'SELECT DISTINCT reporting_manager_name, reporting_manager_mobile FROM da_users WHERE reporting_manager_mobile = $1 LIMIT 1',
-      [phoneNumber]
+    // Woreda Manager login - check unique password from woreda_managers table
+    // First check if phone number exists in woreda_managers table with matching password
+    const woredaManagerResult = await pool.query(
+      `SELECT wm.phone_number, 
+              COALESCE(wm.manager_name, 
+                       (SELECT DISTINCT reporting_manager_name 
+                        FROM da_users 
+                        WHERE reporting_manager_mobile = wm.phone_number 
+                        LIMIT 1)) as name,
+              wm.manager_name
+       FROM woreda_managers wm
+       WHERE wm.phone_number = $1 AND wm.password = $2
+       LIMIT 1`,
+      [phoneNumber, password]
     );
 
-    if (result.rows.length === 0) {
+    if (woredaManagerResult.rows.length === 0) {
+      // Check if phone number exists but password is wrong
+      const phoneCheck = await pool.query(
+        'SELECT phone_number FROM woreda_managers WHERE phone_number = $1',
+        [phoneNumber]
+      );
+      
+      if (phoneCheck.rows.length > 0) {
+        return NextResponse.json(
+          { error: 'Invalid password' },
+          { status: 401 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Invalid phone number' },
+        { error: 'Invalid phone number or password' },
         { status: 401 }
       );
     }
 
-    const manager = result.rows[0];
+    const manager = woredaManagerResult.rows[0];
 
     // Generate token
     const token = Buffer.from(JSON.stringify({
-      phoneNumber: manager.reporting_manager_mobile,
+      phoneNumber: manager.phone_number,
       isAdmin: false
     })).toString('base64');
 
     return NextResponse.json({
       token,
-      woredaRepPhone: manager.reporting_manager_mobile,
-      name: manager.reporting_manager_name || 'Woreda Manager',
+      woredaRepPhone: manager.phone_number,
+      name: manager.name || manager.manager_name || 'Woreda Manager',
       isAdmin: false,
     }, { status: 200 });
   } catch (error) {
