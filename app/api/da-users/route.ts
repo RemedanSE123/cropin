@@ -25,7 +25,21 @@ function isAdmin(request: NextRequest): boolean {
   try {
     const token = authHeader.replace('Bearer ', '');
     const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded.isAdmin === true || decoded.phoneNumber === 'Admin@123';
+    return decoded.isAdmin === true || decoded.phoneNumber === 'Admin@123' || decoded.phoneNumber === 'Admin123';
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to check if user is view-only admin
+function isViewOnlyAdmin(request: NextRequest): boolean {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) return false;
+  
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+    return decoded.isViewOnlyAdmin === true || decoded.phoneNumber === 'Admin123';
   } catch {
     return false;
   }
@@ -99,7 +113,7 @@ export async function GET(request: NextRequest) {
       }
     }
     // Admin can see all, Woreda Reps only see their own
-    else if (!admin && !global && woredaRepPhone && woredaRepPhone !== 'Admin@123') {
+    else if (!admin && !global && woredaRepPhone && woredaRepPhone !== 'Admin@123' && woredaRepPhone !== 'Admin123') {
       paramCount++;
       query += ` AND reporting_manager_mobile = $${paramCount}`;
       params.push(woredaRepPhone);
@@ -154,12 +168,21 @@ export async function PATCH(request: NextRequest) {
   try {
     const woredaRepPhone = getWoredaRepPhone(request);
     const admin = isAdmin(request);
+    const isViewOnly = isViewOnlyAdmin(request);
     const regionalManagerInfo = getRegionalManagerInfo(request);
     
     if (!woredaRepPhone) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // View-only Admins cannot edit (read-only access)
+    if (isViewOnly) {
+      return NextResponse.json(
+        { error: 'View-only administrators have read-only access' },
+        { status: 403 }
       );
     }
 
@@ -189,7 +212,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Admin can edit any DA, Woreda Reps can only edit their own
-    if (!admin && woredaRepPhone !== 'Admin@123') {
+    // Note: View-only admin check already done above
+    if (!admin && woredaRepPhone !== 'Admin@123' && woredaRepPhone !== 'Admin123') {
       const daCheck = await pool.query(
         'SELECT contact_number FROM da_users WHERE contact_number = $1 AND reporting_manager_mobile = $2',
         [contact_number, woredaRepPhone]

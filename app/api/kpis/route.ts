@@ -25,7 +25,7 @@ function isAdmin(request: NextRequest): boolean {
   try {
     const token = authHeader.replace('Bearer ', '');
     const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded.isAdmin === true || decoded.phoneNumber === 'Admin@123';
+    return decoded.isAdmin === true || decoded.phoneNumber === 'Admin@123' || decoded.phoneNumber === 'Admin123';
   } catch {
     return false;
   }

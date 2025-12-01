@@ -94,6 +94,9 @@ export default function DashboardContent() {
     localStorage.removeItem('token');
     localStorage.removeItem('woredaRepPhone');
     localStorage.removeItem('woredaRepName');
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('isViewOnlyAdmin');
+    localStorage.removeItem('isRegionalManager');
     router.push('/login');
   };
 

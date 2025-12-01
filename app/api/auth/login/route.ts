@@ -17,11 +17,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Admin login check - instant, no DB query
+    // Full Admin login check - instant, no DB query
     if (phoneNumber === 'Admin@123' && password === 'Admin@123') {
       const token = Buffer.from(JSON.stringify({
         phoneNumber: 'Admin@123',
-        isAdmin: true
+        isAdmin: true,
+        isViewOnlyAdmin: false
       })).toString('base64');
 
       return NextResponse.json({
@@ -29,6 +30,24 @@ export async function POST(request: NextRequest) {
         woredaRepPhone: 'Admin@123',
         name: 'Administrator',
         isAdmin: true,
+        isViewOnlyAdmin: false,
+      }, { status: 200 });
+    }
+
+    // View-only Admin login check - instant, no DB query
+    if (phoneNumber === 'Admin123' && password === 'Admin123') {
+      const token = Buffer.from(JSON.stringify({
+        phoneNumber: 'Admin123',
+        isAdmin: true,
+        isViewOnlyAdmin: true
+      })).toString('base64');
+
+      return NextResponse.json({
+        token,
+        woredaRepPhone: 'Admin123',
+        name: 'View-Only Administrator',
+        isAdmin: true,
+        isViewOnlyAdmin: true,
       }, { status: 200 });
     }
 

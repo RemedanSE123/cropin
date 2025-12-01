@@ -41,6 +41,7 @@ export default function LoginPage() {
           localStorage.setItem('woredaRepPhone', data.woredaRepPhone),
           localStorage.setItem('woredaRepName', data.name),
           localStorage.setItem('isAdmin', data.isAdmin ? 'true' : 'false'),
+          localStorage.setItem('isViewOnlyAdmin', data.isViewOnlyAdmin ? 'true' : 'false'),
           localStorage.setItem('isRegionalManager', data.isRegionalManager ? 'true' : 'false'),
         ];
         

@@ -47,8 +47,13 @@ export default function AdminDashboard() {
   const [daUsers, setDaUsers] = useState<DAUser[]>([]);
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isViewOnlyAdmin, setIsViewOnlyAdmin] = useState(false);
 
   useEffect(() => {
+    // Check if user is view-only admin
+    const woredaRepPhone = localStorage.getItem('woredaRepPhone');
+    const isViewOnlyAdminFlag = localStorage.getItem('isViewOnlyAdmin') === 'true';
+    setIsViewOnlyAdmin((woredaRepPhone === 'Admin123') || isViewOnlyAdminFlag);
     fetchData();
   }, []);
 
@@ -148,6 +153,8 @@ export default function AdminDashboard() {
     localStorage.removeItem('woredaRepPhone');
     localStorage.removeItem('woredaRepName');
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('isViewOnlyAdmin');
+    localStorage.removeItem('isRegionalManager');
     router.push('/login');
   };
 
@@ -294,10 +301,10 @@ export default function AdminDashboard() {
         {/* Header Section - Matching Dashboard Style */}
         <div className="mb-6 sm:mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-4 sm:p-6 shadow-lg text-white">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-            Administrator Dashboard
+            {isViewOnlyAdmin ? 'View-Only Administrator Dashboard' : 'Administrator Dashboard'}
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-gray-200 font-medium">
-            Manage and monitor all Development Agents across the system
+            {isViewOnlyAdmin ? 'View and monitor all Development Agents across the system' : 'Manage and monitor all Development Agents across the system'}
           </p>
         </div>
 
@@ -540,7 +547,7 @@ export default function AdminDashboard() {
           <DATable
             daUsers={daUsers}
             onUpdate={handleUpdate}
-            isEditable={true}
+            isEditable={!isViewOnlyAdmin}
           />
         </div>
       </main>

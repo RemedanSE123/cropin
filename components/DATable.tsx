@@ -27,18 +27,24 @@ interface DATableProps {
 export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps) {
   // Check if user is admin (Admin@123 only, not phone number)
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isViewOnlyAdmin, setIsViewOnlyAdmin] = useState(false);
   const [isRegionalManager, setIsRegionalManager] = useState(false);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
     const woredaRepPhone = localStorage.getItem('woredaRepPhone');
     const isAdminFlag = localStorage.getItem('isAdmin') === 'true';
+    const isViewOnlyAdminFlag = localStorage.getItem('isViewOnlyAdmin') === 'true';
     const isRegionalManagerFlag = localStorage.getItem('isRegionalManager') === 'true';
     
-    // Only Admin@123 is considered admin, not phone numbers
+    // Only Admin@123 is considered full admin, Admin123 is view-only admin
     setIsAdmin(woredaRepPhone === 'Admin@123' && isAdminFlag === true);
+    setIsViewOnlyAdmin((woredaRepPhone === 'Admin123' && isAdminFlag === true) || isViewOnlyAdminFlag === true);
     setIsRegionalManager(isRegionalManagerFlag === true);
   }, []);
+
+  // Override isEditable if user is view-only admin
+  const effectiveIsEditable = isViewOnlyAdmin ? false : isEditable;
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'total_data_collected' | 'status' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -261,8 +267,8 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
     return filtered;
   }, [localUserData, selectedRegion, selectedZone, selectedWoreda, selectedKebele, searchTerm, advancedSearch, sortField, sortDirection]);
 
-  // Pagination - For admins and regional managers, woreda reps see all DAs
-  const showPagination = isAdmin || isRegionalManager;
+  // Pagination - For admins (full and view-only) and regional managers, woreda reps see all DAs
+  const showPagination = isAdmin || isViewOnlyAdmin || isRegionalManager;
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = showPagination ? (currentPage - 1) * itemsPerPage : 0;
   const endIndex = showPagination ? startIndex + itemsPerPage : filteredUsers.length;
@@ -311,7 +317,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
   }, [daUsers]);
 
   const handleEditStart = (contact_number: string, field: string, currentValue: any) => {
-    if (!isEditable || (field !== 'total_data_collected' && field !== 'status')) {
+    if (!effectiveIsEditable || (field !== 'total_data_collected' && field !== 'status')) {
       return;
     }
     // For total_data_collected, only allow editing if status is Active
@@ -444,8 +450,8 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
         </div>
       </div>
 
-        {/* Cascade Filters - Only for Admin@123 */}
-        {isAdmin && (
+        {/* Cascade Filters - For all admins (full and view-only) */}
+        {(isAdmin || isViewOnlyAdmin) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Region</label>
@@ -614,7 +620,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
               >
                 <div className="flex items-center gap-2">
                   <span>Total Data Collected</span>
-                  {isEditable && <span className="text-xs text-slate-400 font-normal normal-case">(Editable)</span>}
+                  {effectiveIsEditable && <span className="text-xs text-slate-400 font-normal normal-case">(Editable)</span>}
                   <SortIcon field="total_data_collected" />
                 </div>
               </th>
@@ -624,7 +630,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
               >
                 <div className="flex items-center gap-2">
                   <span>Status</span>
-                  {isEditable && <span className="text-xs text-slate-400 font-normal normal-case">(Editable)</span>}
+                  {effectiveIsEditable && <span className="text-xs text-slate-400 font-normal normal-case">(Editable)</span>}
                   <SortIcon field="status" />
                 </div>
               </th>
@@ -658,10 +664,10 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                     </td>
                     <td
                       className={`px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white ${
-                        isEditable && user.status === 'Active' ? 'cursor-pointer hover:bg-blue-50' : ''
+                        effectiveIsEditable && user.status === 'Active' ? 'cursor-pointer hover:bg-blue-50' : ''
                       }`}
                       onClick={() => {
-                        if (isEditable && user.status === 'Active') {
+                        if (effectiveIsEditable && user.status === 'Active') {
                           handleEditStart(user.contact_number, 'total_data_collected', user.total_data_collected);
                         }
                       }}
@@ -683,7 +689,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                         </div>
                       ) : (
                         <div className={`text-sm font-semibold px-3 py-1.5 rounded-md inline-block border relative ${
-                          isEditable && user.status === 'Active'
+                          effectiveIsEditable && user.status === 'Active'
                             ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                             : 'text-slate-600 bg-slate-50 border-slate-200'
                         } ${updatingUsers.has(user.contact_number) ? 'opacity-60' : ''}`}>
@@ -695,7 +701,7 @@ export default function DATable({ daUsers, onUpdate, isEditable }: DATableProps)
                       )}
                     </td>
                     <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap bg-white">
-                      {isEditable ? (
+                      {effectiveIsEditable ? (
                           <select
                           value={user.status === 'Active' ? 'Active' : 'Inactive'}
                           onChange={async (e) => {
