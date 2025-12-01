@@ -99,8 +99,9 @@ export default function RegionalManagerDashboard() {
   // Calculate KPIs for the region
   const totalDAs = daUsers.length;
   const totalData = daUsers.reduce((sum, da) => sum + (da.total_data_collected || 0), 0);
-  const activeDAs = daUsers.filter(da => da.status === 'Active').length;
-  const inactiveDAs = daUsers.filter(da => da.status === 'Inactive').length;
+  // Normalize status: only 'Active' is considered active, everything else is inactive
+  const activeDAs = daUsers.filter(da => (da.status || '').trim() === 'Active').length;
+  const inactiveDAs = totalDAs - activeDAs; // All others are inactive
   const avgDataPerDA = totalDAs > 0 ? Math.round(totalData / totalDAs) : 0;
 
   // Prepare chart data with pagination (10 items per page)
